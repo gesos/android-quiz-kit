@@ -1,9 +1,15 @@
 package com.orsteg.androidquizkit
 
-class Test {
+import android.os.Bundle
+import android.os.PersistableBundle
+import android.support.v7.app.AppCompatActivity
 
-    init {
-        val builder : QuizBuilder = QuizBuilder.Builder().
+class TestActivity: AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        val builder : QuizBuilder = QuizBuilder.Builder(this).
             setAnswerMarker("*").
             setOptionsCount(4).
             build(BuildMethod.fromString(""))
@@ -20,5 +26,7 @@ class Test {
                 quiz.getCurrentQuestionSet()
             }
         })
+
     }
+
 }
