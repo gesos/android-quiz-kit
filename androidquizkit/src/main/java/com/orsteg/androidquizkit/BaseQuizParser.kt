@@ -7,6 +7,7 @@ abstract class BaseQuizParser {
     var mNewParser: String = ""
     var mState: State = State.IDLE
     var mBuffer: StringBuffer = StringBuffer()
+    var isParseComplete: Boolean = false
     var hasFinished: Boolean = false
     var mPointer: Int = 0
 
@@ -38,27 +39,33 @@ abstract class BaseQuizParser {
                         }
                     }
 
-                    hasFinished = true
+                    isParseComplete = true
 
                 }
 
-            }.apply { start() }
+            }.start()
         }
 
         return mState
     }
 
     fun finish(): State {
-        mState = State.END_OT_DATA
 
-        while (!hasFinished);
+        if (!hasFinished) {
+            if (!arrayOf(State.FORCE_FINISH, State.VALIDATION_FAILED, State.PARSE_ERROR).contains(mState)) {
+                mState = State.END_OT_DATA
+            }
 
-        if (arrayOf(State.PARSE_SUCCESS, State.FORCE_FINISH).contains(mState)) {
-            onFinish()
-        } else {
-            onFailed()
+            while (!isParseComplete);
+
+            if (arrayOf(State.PARSE_SUCCESS, State.FORCE_FINISH).contains(mState)) {
+                onFinish()
+            } else {
+                onFailed()
+            }
+
+            hasFinished = true
         }
-
         return mState
     }
 
@@ -78,13 +85,14 @@ abstract class BaseQuizParser {
         parser.mBuffer = mBuffer
     }
 
-
-    abstract fun validate(): Boolean
-
-    abstract fun parse(pointer: Int): Int
-
-    abstract fun getQuestions(): Array<Question>?
-
+    open fun reset() {
+        mNewParser = ""
+        mPointer = 0
+        mBuffer = StringBuffer()
+        mState = State.IDLE
+        isParseComplete = false
+        hasFinished = false
+    }
 
     open fun onFinish() {
 
@@ -97,6 +105,14 @@ abstract class BaseQuizParser {
     open fun onCancel() {
 
     }
+
+
+    abstract fun validate(): Boolean
+
+    abstract fun parse(pointer: Int): Int
+
+    abstract fun getQuestions(): Array<Question>?
+
 
     enum class State {
         IDLE, CANCELLED, END_OT_DATA, PARSE_SUCCESS, PARSE_ERROR, FORCE_FINISH, CHANGE_PARSER,

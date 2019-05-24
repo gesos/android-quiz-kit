@@ -2,8 +2,9 @@ package com.orsteg.androidquizkit.quizParser
 
 import com.orsteg.androidquizkit.BaseQuizParser
 import com.orsteg.androidquizkit.Question
+import com.orsteg.androidquizkit.QuizBuilder
 
-class QuizParser: BaseQuizParser() {
+class QuizParser(val buildConfig: QuizBuilder.Builder): BaseQuizParser() {
 
     override val headerByteSize: Int = 20
 

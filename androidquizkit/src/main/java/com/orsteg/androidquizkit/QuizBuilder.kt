@@ -9,7 +9,8 @@ import java.io.InputStream
 import java.lang.StringBuilder
 import java.util.*
 
-class QuizBuilder private constructor(private val context: Context, private val mBuilder: Builder, private val mMethod: BuildMethod): Quiz.QuizInterface {
+class QuizBuilder private constructor(private val context: Context, private val mBuilder: Builder,
+                                      private val mMethod: BuildMethod): Quiz.QuizInterface {
 
     // Holds all the questions for the quiz
     var questions: ArrayList<Question> = ArrayList()
@@ -55,41 +56,50 @@ class QuizBuilder private constructor(private val context: Context, private val 
 
         val data = ByteArray(1024)
 
-        var parser: BaseQuizParser = mBuilder.mQuizParser ?: QuizParser()
+        var parser: BaseQuizParser = mBuilder.mQuizParser ?: QuizParser(mBuilder)
 
         try {
-            while (run { count = buffer.read(data); count } != -1) {
 
-                parser.apply {
+            loop@ while (run { count = buffer.read(data); count } != -1) {
 
-                    when (append(data)) {
-                        BaseQuizParser.State.FORCE_FINISH -> {
 
-                        }
-                        BaseQuizParser.State.PARSE_ERROR -> {
+                when (parser.append(data)) {
+                    BaseQuizParser.State.FORCE_FINISH -> {
+                        break@loop
+                    }
+                    BaseQuizParser.State.PARSE_ERROR -> {
+                        break@loop
+                    }
+                    BaseQuizParser.State.VALIDATION_FAILED -> {
+                        break@loop
+                    }
+                    BaseQuizParser.State.CHANGE_PARSER -> {
+                        if (mBuilder.mQuizParser == null) {
 
-                        }
-                        BaseQuizParser.State.VALIDATION_FAILED -> {
+                            val parserInfo = parser.mNewParser
+                            // Code to choose new parser
 
-                        }
-                        BaseQuizParser.State.CHANGE_PARSER -> {
-                            if (mBuilder.mQuizParser == null) {
+                            parser.cancel()
 
-                                val parserInfo = mNewParser
-                                // Code to choose new parser
+                            val new = QuizParser(mBuilder)
+                            parser.copy(new)
 
-                                cancel()
-
-                                val new = QuizParser()
-                                copy(new)
-
-                                parser = new
-                            }
-                        }
-                        else -> {
+                            parser = new
                         }
                     }
+                    else -> {
+                        continue@loop
+                    }
                 }
+
+            }
+
+            if (arrayOf(BaseQuizParser.State.FORCE_FINISH, BaseQuizParser.State.PARSE_SUCCESS).contains(parser.finish())) {
+
+                val questions = parser.getQuestions()
+
+            } else {
+
             }
 
             if (mBuilder.mQuizParser == null) {
@@ -102,6 +112,14 @@ class QuizBuilder private constructor(private val context: Context, private val 
 
         buffer.close()
         quizStream.close()
+
+    }
+
+    fun cancel() {
+
+    }
+
+    fun rebuild() {
 
     }
 
