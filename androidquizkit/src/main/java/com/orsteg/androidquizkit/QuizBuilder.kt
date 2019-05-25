@@ -13,7 +13,7 @@ class QuizBuilder private constructor(private val context: Context, private val 
                                       private val mMethod: BuildMethod): Quiz.QuizInterface {
 
     // Holds all the questions for the quiz
-    var questions: ArrayList<Question> = ArrayList()
+    var questions: Array<Question> = arrayOf()
 
     // Quiz config cache
     private var mQuiz: Quiz? = null
@@ -49,70 +49,89 @@ class QuizBuilder private constructor(private val context: Context, private val 
 
     private fun buildFromInputStream(quizStream: InputStream) {
 
-        val buffer = BufferedInputStream(quizStream, 8192)
+        Thread {
+            val buffer = BufferedInputStream(quizStream, 8192)
 
-        // Holds the number of bytes read for each loop
-        var count = 0
+            // Holds the number of bytes read for each loop
+            var count = 0
 
-        val data = ByteArray(1024)
+            val data = ByteArray(1024)
 
-        var parser: BaseQuizParser = mBuilder.mQuizParser ?: QuizParser(mBuilder)
+            var parser: BaseQuizParser = mBuilder.mQuizParser ?: QuizParser(mBuilder)
 
-        try {
+            try {
 
-            loop@ while (run { count = buffer.read(data); count } != -1) {
+                loop@ while (run { count = buffer.read(data); count } != -1) {
 
 
-                when (parser.append(data)) {
-                    BaseQuizParser.State.FORCE_FINISH -> {
-                        break@loop
-                    }
-                    BaseQuizParser.State.PARSE_ERROR -> {
-                        break@loop
-                    }
-                    BaseQuizParser.State.VALIDATION_FAILED -> {
-                        break@loop
-                    }
-                    BaseQuizParser.State.CHANGE_PARSER -> {
-                        if (mBuilder.mQuizParser == null) {
+                    when (parser.append(data)) {
+                        BaseQuizParser.State.FORCE_FINISH -> {
+                            break@loop
+                        }
+                        BaseQuizParser.State.PARSE_ERROR -> {
+                            break@loop
+                        }
+                        BaseQuizParser.State.VALIDATION_FAILED -> {
+                            break@loop
+                        }
+                        BaseQuizParser.State.CHANGE_PARSER -> {
+                            if (mBuilder.mQuizParser == null) {
 
-                            val parserInfo = parser.mNewParser
-                            // Code to choose new parser
+                                val parserInfo = parser.mNewParser
+                                // Code to choose new parser
 
-                            parser.cancel()
+                                parser.cancel()
 
-                            val new = QuizParser(mBuilder)
-                            parser.copy(new)
+                                val new = QuizParser(mBuilder)
+                                parser.copy(new)
 
-                            parser = new
+                                parser = new
+                            }
+                        }
+                        else -> {
+                            continue@loop
                         }
                     }
-                    else -> {
-                        continue@loop
-                    }
+
                 }
 
+                if (arrayOf(
+                        BaseQuizParser.State.FORCE_FINISH,
+                        BaseQuizParser.State.PARSE_SUCCESS
+                    ).contains(parser.finish())) {
+
+                    parser.getQuestions()?.apply { questions = this }
+
+                    notifyListener()
+
+                } else {
+
+                }
+
+                if (mBuilder.mQuizParser == null) {
+                    mBuilder.mQuizParser = parser
+                }
+
+            } catch (e: IOException) {
+                Log.d("Error", e.message)
             }
 
-            if (arrayOf(BaseQuizParser.State.FORCE_FINISH, BaseQuizParser.State.PARSE_SUCCESS).contains(parser.finish())) {
+            buffer.close()
+            quizStream.close()
 
-                val questions = parser.getQuestions()
+        }.start()
 
-            } else {
+        // build quiz
+    }
 
+    private fun notifyListener() {
+        mBuildListener?.apply {
+            (mQuiz as? Quiz1)?.setupQuiz()
+
+            mQuiz?.apply {
+                onFinishBuild(this)
             }
-
-            if (mBuilder.mQuizParser == null) {
-                mBuilder.mQuizParser = parser
-            }
-
-        } catch (e: IOException) {
-            Log.d("Error", e.message)
         }
-
-        buffer.close()
-        quizStream.close()
-
     }
 
     fun cancel() {
@@ -127,6 +146,10 @@ class QuizBuilder private constructor(private val context: Context, private val 
     override fun getQuiz(config: Quiz.Config, listener: Quiz.OnBuildListener) {
         mQuiz = Quiz1(config)
         mBuildListener = listener
+
+        if (questions.isNotEmpty()) {
+            notifyListener()
+        }
     }
 
 
