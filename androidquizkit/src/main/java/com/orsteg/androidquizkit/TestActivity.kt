@@ -1,7 +1,6 @@
 package com.orsteg.androidquizkit
 
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.support.v7.app.AppCompatActivity
 
 class TestActivity: AppCompatActivity() {
@@ -9,10 +8,11 @@ class TestActivity: AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val builder : QuizBuilder = QuizBuilder.Builder(this).
-            setAnswerMarker("*").
-            setOptionsCount(4).
-            build(BuildMethod.fromString(""))
+        val builder : QuizBuilder = QuizBuilder.Builder(this).apply {
+            getDefaultQuizParser().apply {
+
+            }
+        }.build(BuildMethod.fromString(""))
 
 
         val quizConfig : Quiz.Config = Quiz.Config().

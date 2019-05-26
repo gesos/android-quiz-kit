@@ -8,6 +8,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.lang.StringBuilder
 import java.util.*
+import kotlin.math.min
 
 class QuizBuilder private constructor(private val context: Context, private val mBuilder: Builder,
                                       private val mMethod: BuildMethod): Quiz.QuizInterface {
@@ -15,7 +16,7 @@ class QuizBuilder private constructor(private val context: Context, private val 
     // Holds all the questions for the quiz
     var questions: Array<Question> = arrayOf()
 
-    // Quiz config cache
+    // Quiz cache
     private var mQuiz: Quiz? = null
     private var mBuildListener: Quiz.OnBuildListener? = null
 
@@ -57,7 +58,7 @@ class QuizBuilder private constructor(private val context: Context, private val 
 
             val data = ByteArray(1024)
 
-            var parser: BaseQuizParser = mBuilder.mQuizParser ?: QuizParser(mBuilder)
+            var parser = mBuilder.getQuizParser()?: mBuilder.getDefaultQuizParser()
 
             try {
 
@@ -75,14 +76,14 @@ class QuizBuilder private constructor(private val context: Context, private val 
                             break@loop
                         }
                         BaseQuizParser.State.CHANGE_PARSER -> {
-                            if (mBuilder.mQuizParser == null) {
+                            if (mBuilder.getQuizParser() == null) {
 
                                 val parserInfo = parser.mNewParser
                                 // Code to choose new parser
 
                                 parser.cancel()
 
-                                val new = QuizParser(mBuilder)
+                                val new = QuizParser()
                                 parser.copy(new)
 
                                 parser = new
@@ -108,8 +109,8 @@ class QuizBuilder private constructor(private val context: Context, private val 
 
                 }
 
-                if (mBuilder.mQuizParser == null) {
-                    mBuilder.mQuizParser = parser
+                if (mBuilder.getQuizParser() == null) {
+                    mBuilder.setQuizParser(parser)
                 }
 
             } catch (e: IOException) {
@@ -121,14 +122,13 @@ class QuizBuilder private constructor(private val context: Context, private val 
 
         }.start()
 
-        // build quiz
     }
 
     private fun notifyListener() {
         mBuildListener?.apply {
-            (mQuiz as? Quiz1)?.setupQuiz()
 
             mQuiz?.apply {
+                setupQuiz()
                 onFinishBuild(this)
             }
         }
@@ -154,27 +154,16 @@ class QuizBuilder private constructor(private val context: Context, private val 
 
 
     class Builder(private val context: Context) {
-        var mAnswerMarker: String = "*"
-            private set(value) {
-                field = value
-            }
 
-        var mOptionsCount: Int = 4
-            private set(value) {
-                field = value
-            }
+        private val defQuizParser: QuizParser = QuizParser()
+        private var mQuizParser: BaseQuizParser? = null
 
-        var mQuizParser: BaseQuizParser? = null
+        fun getQuizParser(): BaseQuizParser? = mQuizParser
 
-        fun setAnswerMarker(marker: String): Builder {
-            return this
-        }
-
-        fun setOptionsCount(count: Int): Builder {
-            return this
-        }
+        fun getDefaultQuizParser(): QuizParser = defQuizParser
 
         fun setQuizParser(parser: BaseQuizParser): Builder {
+            mQuizParser = parser
             return this
         }
 
@@ -184,42 +173,19 @@ class QuizBuilder private constructor(private val context: Context, private val 
     }
 
 
-    private inner class Quiz1(config: Config) : com.orsteg.androidquizkit.Quiz(config) {
+    private inner class Quiz1(val config: Config) : Quiz(config) {
 
-        fun setupQuiz() {
-
+        override fun setupQuiz() {
+            questionIndexes = if (config.mRandomizeQuestions) generateRandomIndexes()
+                else generateIndexes()
         }
 
         override fun getTotalQuestions(): Int {
             return questions.size
         }
 
-        override fun getCurrentQuestionSet() {
-
-        }
-
-        override fun nextQuestionSet() {
-
-        }
-
-        override fun previousQuestionSet() {
-
-        }
-
-        override fun gotoQuestionSet(set: Int) {
-
-        }
-
-        override fun getQuestionRange(startIndex: Int, stopIndex: Int) {
-
-        }
-
-        override fun getQuestions(indexes: List<Int>) {
-
-        }
-
-        override fun getQuestion(index: Int) {
-
+        override fun getQuestion(index: Int): Question {
+            return questions[index]
         }
 
     }

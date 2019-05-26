@@ -1,6 +1,7 @@
 package com.orsteg.androidquizkit
 
-import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.math.min
 
 abstract class Quiz (private var mConfig: Config){
 
@@ -8,34 +9,67 @@ abstract class Quiz (private var mConfig: Config){
     //private val hasState = savedState != null
 
     // State variables
-    var randomIndexes: ArrayList<Int> = ArrayList()
-    var selections: ArrayList<Int> = ArrayList()
+    var questionIndexes: List<Int> = ArrayList()
+    var runState: ArrayList<Int> = ArrayList()
+    var selectionState: ArrayList<Int> = ArrayList()
 
 
-    var rnd: Random = Random()
+    abstract fun setupQuiz()
 
     abstract fun getTotalQuestions(): Int
 
-
     // Moves a pointer
-    abstract fun getCurrentQuestionSet()
-    abstract fun nextQuestionSet()
-    abstract fun previousQuestionSet()
-    abstract fun gotoQuestionSet(set: Int)
+    fun getCurrentQuestionSet(): List<Question>  {
+        return gotoQuestionSet(currentSet)
+    }
+
+    fun nextQuestionSet(): List<Question>  {
+        return gotoQuestionSet(++currentSet)
+    }
+
+    fun previousQuestionSet(): List<Question> {
+        return gotoQuestionSet(--currentSet)
+    }
+
+    fun gotoQuestionSet(set: Int): List<Question>  {
+        val size = if (mConfig.mSetSize < 0) getTotalQuestions()
+                    else mConfig.mSetSize
+
+        val i = set * size
+        currentSet = set
+
+        return getQuestionRange(i, min(i+size, getTotalQuestions() - 1))
+    }
 
     // Does not move pointer
-    abstract fun getQuestionRange(startIndex: Int, stopIndex: Int)
-    abstract fun getQuestions(indexes: List<Int>)
-    abstract fun getQuestion(index: Int)
+    fun getQuestionRange(startIndex: Int, stopIndex: Int) : List<Question> {
+        return getQuestions((startIndex..stopIndex).toList())
+    }
+
+    fun getQuestions(indexes: List<Int>): List<Question> {
+        return indexes.map { i -> getQuestion(i) }
+    }
+
+    abstract fun getQuestion(index: Int): Question
 
     // Config functions
-    protected fun selectRandomQuestions() {
+    fun generateRandomIndexes() = (0 until getTotalQuestions()).toMutableList().apply {
+        shuffle()
+    }.subList(0, min(kotlin.run {
+        val n = mConfig.mQuestionCount
+        if (n < 0) getTotalQuestions() - 1
+        else mConfig.mQuestionCount
+    }, getTotalQuestions() - 1)).apply {
+        shuffle()
+    }.toList()
 
-    }
+    fun generateIndexes() = (0 until getTotalQuestions()).toMutableList().subList(0,
+        min(kotlin.run {
+        val n = mConfig.mQuestionCount
+        if (n < 0) getTotalQuestions() - 1
+        else mConfig.mQuestionCount
+    }, getTotalQuestions() - 1)).toList()
 
-    private fun selectRandomOptions() {
-
-    }
 
     // Methods to help determine ranges
     fun getSetCount() {
@@ -63,11 +97,11 @@ abstract class Quiz (private var mConfig: Config){
 
     class Config {
 
-        private var mRandomizeOptions: Boolean = true
-        private var mRandomizeQuestions: Boolean = true
-        private var mQuestionCount: Int = -1
-        private var mSetSize: Int = 1
-        private var mTimeInSeconds = -1
+        var mRandomizeOptions: Boolean = true
+        var mRandomizeQuestions: Boolean = true
+        var mQuestionCount: Int = -1
+        var mSetSize: Int = 1
+        var mTimeInSeconds = -1
 
         fun randomizeOptions(randomize: Boolean = true): Config {
             return this
