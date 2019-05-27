@@ -6,9 +6,6 @@ import com.orsteg.androidquizkit.quizParser.QuizParser
 import java.io.BufferedInputStream
 import java.io.IOException
 import java.io.InputStream
-import java.lang.StringBuilder
-import java.util.*
-import kotlin.math.min
 
 class QuizBuilder private constructor(private val context: Context, private val mBuilder: Builder,
                                       private val mMethod: BuildMethod): Quiz.QuizInterface {
@@ -27,7 +24,9 @@ class QuizBuilder private constructor(private val context: Context, private val 
                 buildFromResource()
             }
             BuildMethod.Method.STREAM -> {
-
+                mMethod.mStream?.apply {
+                    buildFromInputStream(this)
+                }
             }
             BuildMethod.Method.STR -> {
 
@@ -55,15 +54,12 @@ class QuizBuilder private constructor(private val context: Context, private val 
 
             // Holds the number of bytes read for each loop
             var count = 0
-
             val data = ByteArray(1024)
-
             var parser = mBuilder.getQuizParser()?: mBuilder.getDefaultQuizParser()
 
             try {
 
                 loop@ while (run { count = buffer.read(data); count } != -1) {
-
 
                     when (parser.append(data)) {
                         BaseQuizParser.State.FORCE_FINISH -> {
@@ -121,7 +117,6 @@ class QuizBuilder private constructor(private val context: Context, private val 
             quizStream.close()
 
         }.start()
-
     }
 
     private fun notifyListener() {
@@ -185,7 +180,7 @@ class QuizBuilder private constructor(private val context: Context, private val 
         }
 
         override fun getQuestion(index: Int): Question {
-            return questions[index]
+            return questions[questionIndexes[index]]
         }
 
     }
