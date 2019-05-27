@@ -23,7 +23,6 @@ abstract class BaseQuizParser {
             mState = State.VALIDATION_START
 
             Thread{
-
                 if (!validate()) {
                     mState = State.VALIDATION_FAILED
                 } else {
@@ -38,10 +37,8 @@ abstract class BaseQuizParser {
                             mState = State.PARSE_SUCCESS
                         }
                     }
-
-                    isParseComplete = true
-
                 }
+                isParseComplete = true
 
             }.start()
         }
