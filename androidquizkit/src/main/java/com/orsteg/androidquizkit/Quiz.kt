@@ -1,16 +1,19 @@
 package com.orsteg.androidquizkit
 
+import android.os.Bundle
 import kotlin.collections.ArrayList
 import kotlin.math.min
 
 abstract class Quiz (private var mConfig: Config){
 
+    var id: Long = 0
+    var topic: String = ""
+
     var currentSet: Int = -1
-    //private val hasState = savedState != null
 
     // State variables
     var questionIndexes: List<Int> = ArrayList()
-    var runState: ArrayList<Int> = ArrayList()
+    var initStates: ArrayList<Int> = ArrayList()
     var selectionState: ArrayList<Int> = ArrayList()
 
 
@@ -71,6 +74,10 @@ abstract class Quiz (private var mConfig: Config){
     }, getTotalQuestions() - 1)).toList()
 
 
+    fun saveState(bundle: Bundle) {
+
+    }
+
     // Methods to help determine ranges
     fun getSetCount() {
 
@@ -95,7 +102,7 @@ abstract class Quiz (private var mConfig: Config){
         fun onFinishBuild(quiz: Quiz)
     }
 
-    class Config {
+    class Config(val inState: Bundle? = null) {
 
         var mRandomizeOptions: Boolean = true
         var mRandomizeQuestions: Boolean = true

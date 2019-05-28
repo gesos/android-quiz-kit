@@ -1,28 +1,30 @@
 package com.orsteg.androidquizkit
 
+import kotlin.collections.ArrayList
+
 open class Question {
     var question: String = ""
-    var options: ArrayList<String> = ArrayList()
+    var options: List<String> = ArrayList()
     var answer: Int = -1
 
-    open fun run(config: Quiz.Config):Int {
-
+    open fun init(config: Quiz.Config):Int {
         if (config.mRandomizeOptions) {
             val i = (1..4).toMutableList().apply {
                 shuffle()
             }.toList()
 
+            val nOptions = (0 until options.size).map { "" }.toMutableList()
+
+            for (o in 0..3) {
+                nOptions[i[o] - 1] = options[o]
+            }
+
+            answer = i[answer]
+            options = nOptions
+
             return i[0]*1000 + i[1]*100 + i[2]*10 + i[3]
         }
-
         return 0
     }
 
-    open fun restore(data: Int) {
-
-    }
-
-    open fun setSelection() {
-
-    }
 }
