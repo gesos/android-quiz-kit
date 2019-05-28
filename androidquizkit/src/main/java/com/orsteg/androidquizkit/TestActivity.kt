@@ -15,11 +15,21 @@ class TestActivity: AppCompatActivity() {
         }.build(BuildMethod.fromString(""))
 
 
-        val quizConfig : Quiz.Config = Quiz.Config().
+        val quizConfig : Quiz.Config = Quiz.Config(savedInstanceState).
             randomizeOptions().
             randomizeQuestions().
             setCount(30).
             maxSetSize(5)
+
+        val timer: QuizTimer = object : QuizTimer(60000) {
+            override fun onTimerTick(passedTimeInMillis: Long) {
+                // update TextView
+            }
+
+            override fun onTimerFinish() {
+                // end quiz
+            }
+        }
 
         builder.getQuiz(quizConfig, object : Quiz.OnBuildListener {
             override fun onFinishBuild(quiz: Quiz) {
@@ -29,4 +39,8 @@ class TestActivity: AppCompatActivity() {
 
     }
 
+    override fun onSaveInstanceState(outState: Bundle?) {
+        super.onSaveInstanceState(outState)
+
+    }
 }

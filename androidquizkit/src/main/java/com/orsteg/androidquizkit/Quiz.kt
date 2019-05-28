@@ -108,21 +108,26 @@ abstract class Quiz (private var mConfig: Config){
         var mRandomizeQuestions: Boolean = true
         var mQuestionCount: Int = -1
         var mSetSize: Int = 1
-        var mTimeInSeconds = -1
+        var mTimer: QuizTimer? = null
 
         fun randomizeOptions(randomize: Boolean = true): Config {
+            mRandomizeOptions = randomize
             return this
         }
         fun randomizeQuestions(randomize: Boolean = true): Config {
+            mRandomizeQuestions = randomize
             return this
         }
         fun setCount(count: Int): Config {
+            mQuestionCount = count
             return this
         }
         fun maxSetSize(size: Int): Config {
+            mSetSize = size
             return this
         }
-        fun setTimer(timeInSeconds: Int): Config {
+        fun setTimer(timer: QuizTimer): Config {
+            mTimer = timer
             return this
         }
     }
