@@ -128,6 +128,15 @@ class QuizHistory private constructor(context: Context) {
         return if (l != -1) l else null
     }
 
+    interface HistoryInterface {
+
+        fun getQuiz(): Quiz
+
+        fun saveToBundle(outState: Bundle?)
+
+        fun restoreState(inState: Bundle?, timeStamp: Long?, isTemporal: Boolean = false)
+    }
+
     class History(val topic: String, val timeStamp: Long, val qIndexes: List<Int>, val initS: List<Int>, val selectS: List<Int?>, val pointer: Int?)
 
     class Stats private constructor() {
@@ -201,11 +210,30 @@ class QuizHistory private constructor(context: Context) {
         }
 
         fun saveToBundle(quiz: Quiz?, outState: Bundle?) {
+            if (outState != null) {
 
+            }
         }
 
-        fun restoreState(quiz: Quiz?, inState: Bundle?) {
+        fun saveToBundle(hInterface: HistoryInterface, outState: Bundle?) {
+            saveToBundle(hInterface.getQuiz(), outState)
+            hInterface.saveToBundle(outState)
+        }
 
+        fun restoreState(quiz: Quiz, inState: Bundle?, timeStamp: Long?, isTemporal: Boolean = false) {
+
+            if (inState != null) {
+
+            } else if (timeStamp != null) {
+                val head = if (isTemporal) "temp_" else ""
+
+            }
+        }
+
+        fun restoreState(hInterface: HistoryInterface, inState: Bundle?, timeStamp: Long?, isTemporal: Boolean = false) {
+            restoreState(hInterface.getQuiz(), inState, timeStamp, isTemporal)
+
+            hInterface.restoreState(inState, timeStamp, isTemporal)
         }
     }
 }
