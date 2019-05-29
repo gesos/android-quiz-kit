@@ -76,7 +76,7 @@ class QuizHistory private constructor(context: Context) {
             pref.run {
                 History(
                     getString("$head${it}_topic", "")?:"", it, getStringSet("$head${it}_index").toIntList(),
-                    getStringSet("$head${it}_init").toNullableIntList(), getStringSet("$head${it}_select").toNullableIntList(),
+                    getStringSet("$head${it}_init").toIntList(), getStringSet("$head${it}_select").toNullableIntList(),
                     getNullableInt("$head${it}_pointer")
                 )
             }
@@ -128,7 +128,7 @@ class QuizHistory private constructor(context: Context) {
         return if (l != -1) l else null
     }
 
-    class History(val topic: String, val timeStamp: Long, val qIndexes: List<Int>, val initS: List<Int?>, val selectS: List<Int?>, val pointer: Int?)
+    class History(val topic: String, val timeStamp: Long, val qIndexes: List<Int>, val initS: List<Int>, val selectS: List<Int?>, val pointer: Int?)
 
     class Stats private constructor() {
 

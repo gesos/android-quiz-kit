@@ -1,6 +1,7 @@
 package com.orsteg.androidquizkit
 
 import android.os.Bundle
+import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.min
 
@@ -13,7 +14,7 @@ abstract class Quiz (private var mConfig: Config){
 
     // State variables
     var questionIndexes: ArrayList<Int> = ArrayList()
-    var initStates: ArrayList<Int?> = ArrayList()
+    var initStates: ArrayList<Int> = ArrayList()
     var selectionState: ArrayList<Int?> = ArrayList()
 
 
@@ -54,9 +55,10 @@ abstract class Quiz (private var mConfig: Config){
     }
 
     fun getQuestion(index: Int): Question {
-        val q = getQuestion(index)
+        val q = fetchQuestion(index)
         if (!q.hasInit) q.apply {
-            initStates[index] = init(mConfig, initStates[index])
+            key = index
+            init(mConfig, initStates[index])
             hasInit = true
         }
 
@@ -65,23 +67,23 @@ abstract class Quiz (private var mConfig: Config){
 
     protected abstract fun fetchQuestion(index: Int): Question
 
+    fun generateRandomStates() = Random().run { (0 until resolveQuestionCount()).map { this.nextInt(11) } }
+
     // Config functions
     fun generateRandomIndexes() = (0 until getTotalQuestions()).toMutableList().apply {
         shuffle()
-    }.subList(0, min(kotlin.run {
-        val n = mConfig.mQuestionCount
-        if (n < 0) getTotalQuestions() - 1
-        else mConfig.mQuestionCount
-    }, getTotalQuestions() - 1)).apply {
+    }.subList(0, resolveQuestionCount()).apply {
         shuffle()
     }.toList()
 
     fun generateIndexes() = (0 until getTotalQuestions()).toMutableList().subList(0,
-        min(kotlin.run {
+        resolveQuestionCount()).toList()
+
+    private fun resolveQuestionCount() = min(kotlin.run {
         val n = mConfig.mQuestionCount
         if (n < 0) getTotalQuestions() - 1
         else mConfig.mQuestionCount
-    }, getTotalQuestions() - 1)).toList()
+    }, getTotalQuestions() - 1)
 
     // Methods to help determine ranges
     fun getSetCount() {
@@ -113,7 +115,6 @@ abstract class Quiz (private var mConfig: Config){
         var mRandomizeQuestions: Boolean = true
         var mQuestionCount: Int = -1
         var mSetSize: Int = 1
-        var mTimer: QuizTimer? = null
 
         fun randomizeOptions(randomize: Boolean = true): Config {
             mRandomizeOptions = randomize
@@ -129,10 +130,6 @@ abstract class Quiz (private var mConfig: Config){
         }
         fun maxSetSize(size: Int): Config {
             mSetSize = size
-            return this
-        }
-        fun setTimer(timer: QuizTimer): Config {
-            mTimer = timer
             return this
         }
     }

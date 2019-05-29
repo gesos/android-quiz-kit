@@ -3,31 +3,32 @@ package com.orsteg.androidquizkit
 import kotlin.collections.ArrayList
 
 open class Question {
+    var key: Int = -1
     var question: String = ""
     var options: List<String> = ArrayList()
     var answer: Int = -1
     var hasInit: Boolean = false
 
-    open fun init(config: Quiz.Config, initState: Int?):Int {
+    open fun init(config: Quiz.Config, initSeed: Int) {
         if (config.mRandomizeOptions) {
 
-            val i = initState?.toString()?.toCharArray()?.map { it.toInt() }
-                ?: (1..4).toMutableList().apply {
-                    shuffle()
-                }.toList()
+            val seed = (initSeed + key + 5214) * question.length + 3142
+            val ids = (seed.toString() + "3142").toCharArray().map { (it.toInt() % 4) }
+            val ar = ArrayList<Int>()
+            for (i in ids) {
+                if (!ar.contains(i)) ar.add(i)
+            }
 
             val nOptions = (0 until options.size).map { "" }.toMutableList()
 
             for (o in 0..3) {
-                nOptions[i[o] - 1] = options[o]
+                nOptions[ar[o]] = options[o]
             }
 
-            answer = i[answer]
+            answer = ar[answer]
             options = nOptions
 
-            return i[0]*1000 + i[1]*100 + i[2]*10 + i[3]
         }
-        return 0
     }
 
 }

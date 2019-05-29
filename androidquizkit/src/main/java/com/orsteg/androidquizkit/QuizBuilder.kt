@@ -6,6 +6,7 @@ import com.orsteg.androidquizkit.quizParser.QuizParser
 import java.io.BufferedInputStream
 import java.io.IOException
 import java.io.InputStream
+import java.util.*
 
 class QuizBuilder private constructor(private val context: Context, private val mBuilder: Builder,
                                       private val mMethod: BuildMethod): Quiz.QuizInterface {
@@ -173,8 +174,7 @@ class QuizBuilder private constructor(private val context: Context, private val 
         override fun setupQuiz() {
             questionIndexes.addAll(run { if (config.mRandomizeQuestions) generateRandomIndexes()
                 else generateIndexes()})
-
-            initStates.addAll((0 until getTotalQuestions()).map { null })
+            initStates.addAll(generateRandomStates())
             selectionState.addAll((0 until getTotalQuestions()).map { null })
         }
 
