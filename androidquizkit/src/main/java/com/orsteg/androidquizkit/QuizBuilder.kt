@@ -53,7 +53,7 @@ class QuizBuilder private constructor(private val context: Context, private val 
             val buffer = BufferedInputStream(quizStream, 8192)
 
             // Holds the number of bytes read for each loop
-            var count = 0
+            var count: Int
             val data = ByteArray(1024)
             var parser = mBuilder.getQuizParser()?: mBuilder.getDefaultQuizParser()
 
@@ -74,8 +74,8 @@ class QuizBuilder private constructor(private val context: Context, private val 
                         BaseQuizParser.State.CHANGE_PARSER -> {
                             if (mBuilder.getQuizParser() == null) {
 
-                                val parserInfo = parser.mNewParser
                                 // Code to choose new parser
+                                //val parserInfo = parser.mNewParser
 
                                 parser.cancel()
 
@@ -171,15 +171,18 @@ class QuizBuilder private constructor(private val context: Context, private val 
     private inner class Quiz1(val config: Config) : Quiz(config) {
 
         override fun setupQuiz() {
-            questionIndexes = if (config.mRandomizeQuestions) generateRandomIndexes()
-                else generateIndexes()
+            questionIndexes.addAll(run { if (config.mRandomizeQuestions) generateRandomIndexes()
+                else generateIndexes()})
+
+            initStates.addAll((0 until getTotalQuestions()).map { null })
+            selectionState.addAll((0 until getTotalQuestions()).map { null })
         }
 
         override fun getTotalQuestions(): Int {
             return questions.size
         }
 
-        override fun getQuestion(index: Int): Question {
+        override fun fetchQuestion(index: Int): Question {
             return questions[questionIndexes[index]]
         }
 

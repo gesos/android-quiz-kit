@@ -6,12 +6,15 @@ open class Question {
     var question: String = ""
     var options: List<String> = ArrayList()
     var answer: Int = -1
+    var hasInit: Boolean = false
 
-    open fun init(config: Quiz.Config):Int {
+    open fun init(config: Quiz.Config, initState: Int?):Int {
         if (config.mRandomizeOptions) {
-            val i = (1..4).toMutableList().apply {
-                shuffle()
-            }.toList()
+
+            val i = initState?.toString()?.toCharArray()?.map { it.toInt() }
+                ?: (1..4).toMutableList().apply {
+                    shuffle()
+                }.toList()
 
             val nOptions = (0 until options.size).map { "" }.toMutableList()
 

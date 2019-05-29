@@ -12,9 +12,9 @@ abstract class Quiz (private var mConfig: Config){
     var currentSet: Int = -1
 
     // State variables
-    var questionIndexes: List<Int> = ArrayList()
-    var initStates: ArrayList<Int> = ArrayList()
-    var selectionState: ArrayList<Int> = ArrayList()
+    var questionIndexes: ArrayList<Int> = ArrayList()
+    var initStates: ArrayList<Int?> = ArrayList()
+    var selectionState: ArrayList<Int?> = ArrayList()
 
 
     abstract fun setupQuiz()
@@ -53,7 +53,17 @@ abstract class Quiz (private var mConfig: Config){
         return indexes.map { i -> getQuestion(i) }
     }
 
-    abstract fun getQuestion(index: Int): Question
+    fun getQuestion(index: Int): Question {
+        val q = getQuestion(index)
+        if (!q.hasInit) q.apply {
+            initStates[index] = init(mConfig, initStates[index])
+            hasInit = true
+        }
+
+        return q
+    }
+
+    protected abstract fun fetchQuestion(index: Int): Question
 
     // Config functions
     fun generateRandomIndexes() = (0 until getTotalQuestions()).toMutableList().apply {
@@ -72,11 +82,6 @@ abstract class Quiz (private var mConfig: Config){
         if (n < 0) getTotalQuestions() - 1
         else mConfig.mQuestionCount
     }, getTotalQuestions() - 1)).toList()
-
-
-    fun saveState(bundle: Bundle) {
-
-    }
 
     // Methods to help determine ranges
     fun getSetCount() {

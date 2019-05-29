@@ -3,6 +3,7 @@ package com.orsteg.androidquizkit
 import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Bundle
 
 
 class QuizHistory private constructor(context: Context) {
@@ -75,7 +76,7 @@ class QuizHistory private constructor(context: Context) {
             pref.run {
                 History(
                     getString("$head${it}_topic", "")?:"", it, getStringSet("$head${it}_index").toIntList(),
-                    getStringSet("$head${it}_init").toIntList(), getStringSet("$head${it}_select").toIntList(),
+                    getStringSet("$head${it}_init").toNullableIntList(), getStringSet("$head${it}_select").toNullableIntList(),
                     getNullableInt("$head${it}_pointer")
                 )
             }
@@ -112,7 +113,8 @@ class QuizHistory private constructor(context: Context) {
         editor.commit()
     }
 
-    private fun <T> List<T>.toStringSet() = this.map { it.toString() }.toSet()
+    private fun <T> List<T?>.toStringSet() = this.map { it?.toString()?:"" }.toSet()
+    private fun Set<String>.toNullableIntList() = this.map { if (it != "") it.toInt() else null }.toList()
     private fun Set<String>.toIntList() = this.map { it.toInt() }.toList()
     private fun SharedPreferences.getStringSet(key: String): Set<String>
             = this.getStringSet(key, ArrayList<String>().toSet())?:ArrayList<String>().toSet()
@@ -126,7 +128,7 @@ class QuizHistory private constructor(context: Context) {
         return if (l != -1) l else null
     }
 
-    class History(val topic: String, val timeStamp: Long, val qIndexes: List<Int>, val initS: List<Int>, val selectS: List<Int>, val pointer: Int?)
+    class History(val topic: String, val timeStamp: Long, val qIndexes: List<Int>, val initS: List<Int?>, val selectS: List<Int?>, val pointer: Int?)
 
     class Stats private constructor() {
 
@@ -174,14 +176,14 @@ class QuizHistory private constructor(context: Context) {
              * Retrieves the indexes for all questions that has been answered
              */
             fun getAnsweredIndexes(quiz: Quiz): List<Int> {
-                return (0 until quiz.selectionState.size).filter { quiz.selectionState[it] != -1 }.map { it }
+                return (0 until quiz.selectionState.size).filter { quiz.selectionState[it] != null }.map { it }
             }
 
             /**
              * Retrieves the indexes for all the correctly answered questions
              */
             fun getCorrectlyAnsweredIndexes(quiz: Quiz): List<Int> {
-                return (0 until quiz.selectionState.size).filter { quiz.selectionState[it] == quiz.getQuestion(it).answer }.map { it }
+                return getAnsweredIndexes(quiz).filter { quiz.selectionState[it] == quiz.getQuestion(it).answer }.map { it }
             }
 
         }
@@ -196,6 +198,14 @@ class QuizHistory private constructor(context: Context) {
                 instance = QuizHistory(context)
             }
             return instance!!
+        }
+
+        fun saveToBundle(quiz: Quiz?, outState: Bundle?) {
+
+        }
+
+        fun restoreState(quiz: Quiz?, inState: Bundle?) {
+
         }
     }
 }

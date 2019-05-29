@@ -5,6 +5,8 @@ import android.support.v7.app.AppCompatActivity
 
 class TestActivity: AppCompatActivity() {
 
+    var mQuiz: Quiz? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -33,6 +35,8 @@ class TestActivity: AppCompatActivity() {
 
         builder.getQuiz(quizConfig, object : Quiz.OnBuildListener {
             override fun onFinishBuild(quiz: Quiz) {
+                QuizHistory.restoreState(quiz, savedInstanceState)
+                mQuiz = quiz
                 quiz.getCurrentQuestionSet()
             }
         })
@@ -41,6 +45,6 @@ class TestActivity: AppCompatActivity() {
 
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
-
+        QuizHistory.saveToBundle(mQuiz, outState)
     }
 }
