@@ -8,7 +8,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.util.*
 
-class QuizBuilder private constructor(private val context: Context, private val mBuilder: Builder,
+class QuizBuilder private constructor(private val context: Context, private val topic: String, private val mBuilder: Builder,
                                       private val mMethod: BuildMethod): Quiz.QuizInterface {
 
     // Holds all the questions for the quiz
@@ -140,7 +140,7 @@ class QuizBuilder private constructor(private val context: Context, private val 
 
 
     override fun getQuiz(config: Quiz.Config, listener: Quiz.OnBuildListener) {
-        mQuiz = Quiz1(config)
+        mQuiz = Quiz1(topic, config)
         mBuildListener = listener
 
         if (questions.isNotEmpty()) {
@@ -163,13 +163,13 @@ class QuizBuilder private constructor(private val context: Context, private val 
             return this
         }
 
-        fun build(method: BuildMethod): QuizBuilder {
-            return QuizBuilder(context, this, method)
+        fun build(topic: String, method: BuildMethod): QuizBuilder {
+            return QuizBuilder(context, topic, this, method)
         }
     }
 
 
-    private inner class Quiz1(val config: Config) : Quiz(config) {
+    private inner class Quiz1(topic: String,val config: Config) : Quiz(topic, config) {
 
         override fun setupQuiz() {
             questionIndexes.addAll(run { if (config.mRandomizeQuestions) generateRandomIndexes()

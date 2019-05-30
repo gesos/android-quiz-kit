@@ -14,10 +14,10 @@ class TestActivity: AppCompatActivity() {
             getDefaultQuizParser().apply {
 
             }
-        }.build(BuildMethod.fromString(""))
+        }.build("physics", BuildMethod.fromString(""))
 
 
-        val quizConfig : Quiz.Config = Quiz.Config(savedInstanceState).
+        val quizConfig : Quiz.Config = Quiz.Config().
             randomizeOptions().
             randomizeQuestions().
             setCount(30).

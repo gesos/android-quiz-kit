@@ -51,9 +51,8 @@ class QuizHistory private constructor(context: Context) {
 
         if (success) {
             editor.remove("$head${it}_index")
-                .remove("$head${it}_init")
-                .remove("$head${it}_topic")
-                .remove("$head${it}_select").apply()
+                .remove("$head${it}_init").remove("$head${it}_topic")
+                .remove("$head${it}_maker").remove("$head${it}_select").apply()
 
             if (isTemporal) {
                 editor.remove("$head${it}_pointer").apply()
@@ -83,7 +82,20 @@ class QuizHistory private constructor(context: Context) {
         } else null
     }
 
-    fun saveToHistory(quiz: Quiz, isTemporal: Boolean = false) {
+    fun getMaker(it: Long, isTemporal: Boolean = false): String? {
+        val head = if (isTemporal) "temp_" else ""
+
+        return if (pref.getStringSet("${head}quiz_ids").contains(it.toString())) {
+            pref.getString("$head${it}_maker", "")
+        } else null
+    }
+
+    fun saveToHistory(hInterface: HistoryInterface, isTemporal: Boolean = false) {
+        saveToHistory(hInterface.getQuiz(), isTemporal, hInterface::class.java.name)
+        hInterface.saveToHistory(isTemporal)
+    }
+
+    fun saveToHistory(quiz: Quiz, isTemporal: Boolean = false, maker: String = this::class.java.name) {
         val head = if (isTemporal) "temp_" else ""
 
         // save history id
@@ -95,7 +107,8 @@ class QuizHistory private constructor(context: Context) {
         editor.putStringSet("$head${quiz.id}_index", quiz.questionIndexes.toStringSet())
             .putStringSet("$head${quiz.id}_init", quiz.initStates.toStringSet())
             .putStringSet("$head${quiz.id}_select", quiz.selectionState.toStringSet())
-            .putString("$head${quiz.id}_topic", quiz.topic).apply()
+            .putString("$head${quiz.id}_topic", quiz.topic)
+            .putString("$head${quiz.id}_maker", maker).apply()
 
         if (isTemporal) {
             editor.putInt("$head${quiz.id}_pointer", quiz.currentSet).apply()
@@ -132,9 +145,11 @@ class QuizHistory private constructor(context: Context) {
 
         fun getQuiz(): Quiz
 
+        fun saveToHistory(isTemporal: Boolean = false)
+
         fun saveToBundle(outState: Bundle?)
 
-        fun restoreState(inState: Bundle?, timeStamp: Long?, isTemporal: Boolean = false)
+        fun restoreState(inState: Bundle?, timeStamp: Long? = null, isTemporal: Boolean = false)
     }
 
     class History(val topic: String, val timeStamp: Long, val qIndexes: List<Int>, val initS: List<Int>, val selectS: List<Int?>, val pointer: Int?)
@@ -220,7 +235,7 @@ class QuizHistory private constructor(context: Context) {
             hInterface.saveToBundle(outState)
         }
 
-        fun restoreState(quiz: Quiz, inState: Bundle?, timeStamp: Long?, isTemporal: Boolean = false) {
+        fun restoreState(quiz: Quiz, inState: Bundle?, timeStamp: Long? = null, isTemporal: Boolean = false) {
 
             if (inState != null) {
 
@@ -230,7 +245,7 @@ class QuizHistory private constructor(context: Context) {
             }
         }
 
-        fun restoreState(hInterface: HistoryInterface, inState: Bundle?, timeStamp: Long?, isTemporal: Boolean = false) {
+        fun restoreState(hInterface: HistoryInterface, inState: Bundle?, timeStamp: Long? = null, isTemporal: Boolean = false) {
             restoreState(hInterface.getQuiz(), inState, timeStamp, isTemporal)
 
             hInterface.restoreState(inState, timeStamp, isTemporal)

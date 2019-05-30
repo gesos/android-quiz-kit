@@ -5,10 +5,9 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.min
 
-abstract class Quiz (private var mConfig: Config){
+abstract class Quiz (var topic: String, private var mConfig: Config){
 
     var id: Long = 0
-    var topic: String = ""
 
     var currentSet: Int = -1
 
@@ -21,6 +20,10 @@ abstract class Quiz (private var mConfig: Config){
     abstract fun setupQuiz()
 
     abstract fun getTotalQuestions(): Int
+
+    fun setId() {
+
+    }
 
     // Moves a pointer
     fun getCurrentQuestionSet(): List<Question>  {
@@ -61,6 +64,8 @@ abstract class Quiz (private var mConfig: Config){
             init(mConfig, initStates[index])
             hasInit = true
         }
+
+        if (id == 0L) setId()
 
         return q
     }
@@ -109,7 +114,7 @@ abstract class Quiz (private var mConfig: Config){
         fun onFinishBuild(quiz: Quiz)
     }
 
-    class Config(val inState: Bundle? = null) {
+    class Config {
 
         var mRandomizeOptions: Boolean = true
         var mRandomizeQuestions: Boolean = true
