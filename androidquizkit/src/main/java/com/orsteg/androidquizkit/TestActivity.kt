@@ -5,7 +5,7 @@ import android.support.v7.app.AppCompatActivity
 
 class TestActivity: AppCompatActivity() {
 
-    var mQuiz: Quiz? = null
+    var mQuiz: TimedQuiz? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,20 +23,10 @@ class TestActivity: AppCompatActivity() {
             setCount(30).
             maxSetSize(5)
 
-        val timer: QuizTimer = object : QuizTimer(60000) {
-            override fun onTimerTick(passedTimeInMillis: Long) {
-                // update TextView
-            }
-
-            override fun onTimerFinish() {
-                // end quiz
-            }
-        }
-
         builder.getQuiz(quizConfig, object : Quiz.OnBuildListener {
             override fun onFinishBuild(quiz: Quiz) {
-                QuizHistory.restoreState(quiz, savedInstanceState)
-                mQuiz = quiz
+                val timedQuiz = TimedQuiz(quiz, 6000)
+                QuizHistory.restoreState(timedQuiz, savedInstanceState)
                 quiz.getCurrentQuestionSet()
             }
         })

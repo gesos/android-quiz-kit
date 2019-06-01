@@ -15,20 +15,23 @@ class QuizHistory private constructor(context: Context) {
             .map {
                 pref.run {
                     Stats(getString("${it}_topic", "")?:"", it.toLong(), getStringSet("${it}_answers").toIntList(),
-                        getStringSet("${it}_correct").toIntList(), getInt("${it}_count", 0),
-                        getNullableLong("${it}_total_time"), getNullableLong("${it}_finish_time"))
+                        getStringSet("${it}_correct").toIntList(), getInt("${it}_count", 0))
                 }
             }
 
+    fun getStat(it: Long): Stats? {
+        return getStat(it, Stats())
+    }
 
-    fun getStat(it: Long): Stats?{
+    fun <S: Stats> getStat(it: Long, stat: S): S? {
         return if (pref.getStringSet("quiz_ids").contains(it.toString())) {
             pref.run {
-                Stats(
-                    getString("${it}_topic", "")?:"", it, getStringSet("${it}_answers").toIntList(),
-                    getStringSet("${it}_correct").toIntList(), getInt("${it}_count", 0),
-                    getNullableLong("${it}_total_time"), getNullableLong("${it}_finish_time")
-                )
+                stat.apply {
+                    initValues(
+                        getString("${it}_topic", "")?:"", it, getStringSet("${it}_answers").toIntList(),
+                        getStringSet("${it}_correct").toIntList(), getInt("${it}_count", 0)
+                    )
+                }
             }
         } else null
     }
@@ -58,9 +61,7 @@ class QuizHistory private constructor(context: Context) {
                 editor.remove("$head${it}_pointer").apply()
             } else {
                 // remove stats
-                editor.remove("${it}_count").remove("${it}_answers")
-                    .remove("${it}_correct").remove("${it}_total_time")
-                    .remove("${it}_finish_time").apply()
+                editor.remove("${it}_count").remove("${it}_answers").apply()
             }
         }
         editor.commit()
@@ -118,9 +119,7 @@ class QuizHistory private constructor(context: Context) {
 
             editor.putInt("${quiz.id}_count", stats.questionCount)
                 .putStringSet("${quiz.id}_answers", stats.answeredIndexes?.toStringSet())
-                .putStringSet("${quiz.id}_correct", stats.correctIndexes?.toStringSet())
-                .putLong("${quiz.id}_total_time", stats.totalTime?:-1L)
-                .putLong("${quiz.id}_finish_time", stats.finishTime?:-1L).apply()
+                .putStringSet("${quiz.id}_correct", stats.correctIndexes?.toStringSet()).apply()
         }
 
         editor.commit()
@@ -150,11 +149,12 @@ class QuizHistory private constructor(context: Context) {
         fun saveToBundle(outState: Bundle?)
 
         fun restoreState(inState: Bundle?, timeStamp: Long? = null, isTemporal: Boolean = false)
+
     }
 
     class History(val topic: String, val timeStamp: Long, val qIndexes: List<Int>, val initS: List<Int>, val selectS: List<Int?>, val pointer: Int?)
 
-    class Stats private constructor() {
+    open class Stats() {
 
         var topic: String = ""
         var quizTimestamp: Long = 0
@@ -163,23 +163,28 @@ class QuizHistory private constructor(context: Context) {
         var correctIndexes: List<Int>? = null
         var correctCount: Int = 0
         var questionCount: Int = 0
-        var totalTime: Long? = null
-        var finishTime: Long? = null
-        
-        constructor(quiz: Quiz): this() {
+
+        constructor(quiz: Quiz) : this() {
             topic = quiz.topic
             quizTimestamp = quiz.id
             answeredIndexes = getAnsweredIndexes(quiz)
-            answeredCount = answeredIndexes?.size?:0
+            answeredCount = answeredIndexes?.size ?: 0
             correctIndexes = getCorrectlyAnsweredIndexes(quiz)
-            correctCount = correctIndexes?.size?:0
+            correctCount = correctIndexes?.size ?: 0
             questionCount = quiz.getTotalQuestions()
-            totalTime = 0
-            finishTime = 0
         }
 
-        constructor(topic: String, quizTimestamp: Long, answeredIndexes: List<Int>, correctIndexes: List<Int>,
-                    questionCount: Int, totalTime: Long?, finishTime: Long?): this() {
+        constructor(
+            topic: String, quizTimestamp: Long, answeredIndexes: List<Int>, correctIndexes: List<Int>,
+            questionCount: Int
+        ) : this() {
+            initValues(topic, quizTimestamp, answeredIndexes, correctIndexes, questionCount)
+        }
+
+        fun initValues(
+            topic: String, quizTimestamp: Long, answeredIndexes: List<Int>, correctIndexes: List<Int>,
+            questionCount: Int) {
+
             this.topic = topic
             this.quizTimestamp = quizTimestamp
             this.answeredIndexes = answeredIndexes
@@ -187,9 +192,8 @@ class QuizHistory private constructor(context: Context) {
             this.correctIndexes = correctIndexes
             correctCount = correctIndexes.size
             this.questionCount = questionCount
-            this.totalTime = totalTime
-            this.finishTime = finishTime
         }
+
 
         companion object {
 
@@ -207,9 +211,9 @@ class QuizHistory private constructor(context: Context) {
              * Retrieves the indexes for all the correctly answered questions
              */
             fun getCorrectlyAnsweredIndexes(quiz: Quiz): List<Int> {
-                return getAnsweredIndexes(quiz).filter { quiz.selectionState[it] == quiz.getQuestion(it).answer }.map { it }
+                return getAnsweredIndexes(quiz).filter { quiz.selectionState[it] == quiz.getQuestion(it).answer }
+                    .map { it }
             }
-
         }
     }
 
@@ -225,21 +229,20 @@ class QuizHistory private constructor(context: Context) {
         }
 
         fun saveToBundle(quiz: Quiz?, outState: Bundle?) {
-            if (outState != null) {
+            outState?.apply {
 
             }
         }
 
-        fun saveToBundle(hInterface: HistoryInterface, outState: Bundle?) {
-            saveToBundle(hInterface.getQuiz(), outState)
-            hInterface.saveToBundle(outState)
+        fun saveToBundle(hInterface: HistoryInterface?, outState: Bundle?) {
+            saveToBundle(hInterface?.getQuiz(), outState)
+            hInterface?.saveToBundle(outState)
         }
 
         fun restoreState(quiz: Quiz, inState: Bundle?, timeStamp: Long? = null, isTemporal: Boolean = false) {
+            inState?.apply {
 
-            if (inState != null) {
-
-            } else if (timeStamp != null) {
+            } ?: timeStamp?.apply {
                 val head = if (isTemporal) "temp_" else ""
 
             }
