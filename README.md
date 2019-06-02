@@ -1,5 +1,5 @@
 # Android Quiz Kit
-Build quality quiz apps with this specialized development kit
+Specialized development kit for building standard quiz apps
 
 ## License
 This project is licensed under the Apache License Version 2.0, January 2004. Read the [license](/LICENSE) statement for more information.
