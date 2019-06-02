@@ -108,7 +108,7 @@ abstract class BaseQuizParser {
 
     abstract fun parse(pointer: Int): Int
 
-    abstract fun getQuestions(): Array<Question>?
+    abstract fun getQuestions(): List<Question>?
 
 
     enum class State {

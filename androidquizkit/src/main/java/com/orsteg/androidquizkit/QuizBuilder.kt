@@ -6,13 +6,12 @@ import com.orsteg.androidquizkit.quizParser.QuizParser
 import java.io.BufferedInputStream
 import java.io.IOException
 import java.io.InputStream
-import java.util.*
 
 class QuizBuilder private constructor(private val context: Context, private val topic: String, private val mBuilder: Builder,
                                       private val mMethod: BuildMethod): Quiz.QuizInterface {
 
     // Holds all the questions for the quiz
-    var questions: Array<Question> = arrayOf()
+    var questions: List<Question> = listOf()
 
     // Quiz cache
     private var mQuiz: Quiz? = null

@@ -22,7 +22,7 @@ abstract class Quiz (var topic: String, private var mConfig: Config){
     abstract fun getTotalQuestions(): Int
 
     fun setId() {
-
+        id = Calendar.getInstance().timeInMillis
     }
 
     // Moves a pointer

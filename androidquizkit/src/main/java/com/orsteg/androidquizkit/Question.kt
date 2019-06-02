@@ -5,7 +5,7 @@ import kotlin.collections.ArrayList
 open class Question {
     var key: Int = -1
     var question: String = ""
-    var options: List<String> = ArrayList()
+    var options: ArrayList<String> = ArrayList()
     var answer: Int = -1
     var hasInit: Boolean = false
 
@@ -26,7 +26,9 @@ open class Question {
             }
 
             answer = ar[answer]
-            options = nOptions
+            options = ArrayList<String>().apply {
+                addAll(nOptions)
+            }
 
         }
     }

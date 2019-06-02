@@ -4,9 +4,15 @@ import com.orsteg.androidquizkit.BaseQuizParser
 import com.orsteg.androidquizkit.Question
 import com.orsteg.androidquizkit.QuizBuilder
 
-class QuizParser(): BaseQuizParser() {
+class QuizParser: BaseQuizParser() {
 
-    override val headerByteSize: Int = 20
+    override val headerByteSize: Int = 7
+
+    private var currentLine: Int = 0
+
+    var question = Question()
+
+    val tempQuestions = ArrayList<Question>()
 
     var mAnswerMarker: String = "*"
         private set(value) {
@@ -20,17 +26,77 @@ class QuizParser(): BaseQuizParser() {
 
     override fun validate(): Boolean {
 
-        return false
+        return mBuffer.toString() == "<!QUIZ>"
     }
 
     override fun parse(pointer: Int): Int {
 
-        return 0
+        var cursor = pointer
+        if (cursor == 0) cursor = mBuffer.indexOf(">")
+
+        var start: Int
+        var end = 0
+
+        while (end != -1 && cursor != mBuffer.lastIndex) {
+
+            start = mBuffer.indexOf("\n", cursor)
+            end = mBuffer.indexOf("\n", start + 1)
+
+            if (end != -1 || mState == State.END_OT_DATA) {
+
+                if (mState == State.END_OT_DATA) {
+                    end = mBuffer.length
+                }
+
+                val text = mBuffer.substring(start + 1, end)
+
+                // check for valid file line
+                if (!text.matches("\\s*".toRegex())) {
+                    // Each 5th line starting from 0 represents the beginning of a new question
+                    // While each 1st to 4th lines starting from 0 contains the options a - d
+                    val line = currentLine % 5
+                    if (line == 0) {
+
+                        // set the question text
+                        question.question = text.replaceFirst("(\\s*)(\\d+)(\\.)(\\s*)".toRegex(), "")
+
+                    } else if (line in 1..4) {
+
+                        // check if current option is the answer
+                        val isAnswer = text.matches("(\\s*)(\\*)([abcd]+)(.*)".toRegex())
+
+                        // get the option removing the options letter
+                        val option = text.replaceFirst("(\\s*)([*abcd]+)(\\.)(\\s*)".toRegex(), "")
+
+                        // add the option to the question
+                        question.options.add(option)
+
+                        if (isAnswer) question.answer = question.options.size - 1
+
+                        // check if the last option has been included to the question and add the question to the ArrayList
+                        if (line == 4) {
+
+                            // add question to ArrayList
+                            tempQuestions.add(question)
+
+                            // init a new question
+                            question = Question()
+                        }
+                    }
+
+
+                    currentLine++
+                }
+
+                cursor = end
+            }
+        }
+
+        return cursor
     }
 
-    override fun getQuestions(): Array<Question>? {
-
-        return null
+    override fun getQuestions(): List<Question>? {
+        return tempQuestions
     }
 
 
