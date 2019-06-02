@@ -1,8 +1,8 @@
-package com.orsteg.androidquizkit
+package com.orsteg.gesos.androidquizkit
 
 import android.content.Context
 import android.util.Log
-import com.orsteg.androidquizkit.quizParser.QuizParser
+import com.orsteg.gesos.androidquizkit.quizParser.QuizParser
 import java.io.BufferedInputStream
 import java.io.IOException
 import java.io.InputStream

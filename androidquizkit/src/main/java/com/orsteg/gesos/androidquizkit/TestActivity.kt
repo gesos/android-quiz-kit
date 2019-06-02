@@ -1,4 +1,4 @@
-package com.orsteg.androidquizkit
+package com.orsteg.gesos.androidquizkit
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity

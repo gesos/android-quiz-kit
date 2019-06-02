@@ -1,4 +1,4 @@
-package com.orsteg.androidquizkit
+package com.orsteg.gesos.androidquizkit
 
 import android.content.Context
 import android.os.Bundle

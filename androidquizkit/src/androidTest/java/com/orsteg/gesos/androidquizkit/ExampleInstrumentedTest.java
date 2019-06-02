@@ -1,4 +1,4 @@
-package com.orsteg.androidquizkit;
+package com.orsteg.gesos.androidquizkit;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.orsteg.androidquizkit.test", appContext.getPackageName());
+        assertEquals("com.orsteg.gesos.androidquizkit.test", appContext.getPackageName());
     }
 }

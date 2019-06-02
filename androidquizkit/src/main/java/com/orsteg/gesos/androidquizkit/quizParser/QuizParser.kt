@@ -1,8 +1,8 @@
-package com.orsteg.androidquizkit.quizParser
+package com.orsteg.gesos.androidquizkit.quizParser
 
-import com.orsteg.androidquizkit.BaseQuizParser
-import com.orsteg.androidquizkit.Question
-import com.orsteg.androidquizkit.QuizBuilder
+import com.orsteg.gesos.androidquizkit.BaseQuizParser
+import com.orsteg.gesos.androidquizkit.Question
+import com.orsteg.gesos.androidquizkit.QuizBuilder
 
 class QuizParser: BaseQuizParser() {
 
