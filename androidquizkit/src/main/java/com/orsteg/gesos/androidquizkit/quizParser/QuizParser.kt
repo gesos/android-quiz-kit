@@ -26,7 +26,7 @@ class QuizParser: BaseQuizParser() {
 
     override fun validate(): Boolean {
 
-        return mBuffer.toString() == "<!QUIZ>"
+        return mBuffer.substring(0, headerByteSize) == "<!QUIZ>"
     }
 
     override fun parse(pointer: Int): Int {
