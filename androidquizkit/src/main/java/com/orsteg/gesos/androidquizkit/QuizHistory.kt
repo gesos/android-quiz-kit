@@ -228,23 +228,61 @@ class QuizHistory private constructor(context: Context) {
             return instance!!
         }
 
-        fun saveToBundle(quiz: Quiz?, outState: Bundle?) {
+        fun saveToBundle(quiz: Quiz?, outState: Bundle?,  maker: String? = this::class.java.name) {
             outState?.apply {
+                quiz?.also {
+                    // save quiz id
+                    putLong("quiz_id", it.id)
 
+                    // save history data
+                    putIntegerArrayList("quiz_index", it.questionIndexes)
+                    putIntegerArrayList("quiz_init", it.initStates)
+                    putIntegerArrayList("quiz_select", it.selectionState)
+                    putString("quiz_topic", it.topic)
+                    putString("quiz_maker", maker)
+                    putInt("quiz_pointer", it.currentSet)
+                }
             }
         }
 
         fun saveToBundle(hInterface: HistoryInterface?, outState: Bundle?) {
-            saveToBundle(hInterface?.getQuiz(), outState)
+            saveToBundle(hInterface?.getQuiz(), outState, hInterface?.let {
+                it::class.java.name
+            })
             hInterface?.saveToBundle(outState)
         }
 
+        fun getBundleMaker(inState: Bundle?): String? = inState?.getString("quiz_maker")
+
+        fun getHistoryFromBundle(inState: Bundle) : History? {
+            return if (inState.containsKey("quiz_id"))
+                inState.run {
+                    History(
+                        getString("quiz_topic") ?: "", getLong("quiz_id"),
+                        getIntegerArrayList("quiz_index")?: arrayListOf(),
+                        getIntegerArrayList("quiz_init")?: arrayListOf(),
+                        getIntegerArrayList("quiz_select")?: arrayListOf(),
+                        getInt("quiz_pointer")
+                    )
+
+                }
+            else null
+        }
+
         fun restoreState(quiz: Quiz, inState: Bundle?, timeStamp: Long? = null, isTemporal: Boolean = false) {
-            inState?.apply {
-
-            } ?: timeStamp?.apply {
-                val head = if (isTemporal) "temp_" else ""
-
+            inState?.let {
+                getHistoryFromBundle(it)
+            }?: timeStamp?.let {
+                getInstance(quiz.getContext()).getHistory(it, isTemporal)
+            }?.also {
+                quiz.apply {
+                    id = it.timeStamp
+                    topic = it.topic
+                    initStates = ArrayList<Int>().apply { addAll(it.initS)}
+                    selectionState = ArrayList<Int?>().apply { addAll(it.selectS)}
+                    currentSet = it.pointer?:0
+                    questionIndexes = ArrayList<Int>().apply { addAll(it.qIndexes)}
+                }
             }
         }
 

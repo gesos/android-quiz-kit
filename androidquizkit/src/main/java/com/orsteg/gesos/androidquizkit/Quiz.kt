@@ -1,6 +1,6 @@
 package com.orsteg.gesos.androidquizkit
 
-import android.os.Bundle
+import android.content.Context
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.min
@@ -20,6 +20,8 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
     abstract fun setupQuiz()
 
     abstract fun getTotalQuestions(): Int
+
+    abstract fun getContext(): Context
 
     fun setId() {
         id = Calendar.getInstance().timeInMillis

@@ -176,6 +176,7 @@ class QuizBuilder private constructor(private val context: Context, private val 
             return questions[questionIndexes[index]]
         }
 
+        override fun getContext(): Context = context
     }
 
 }

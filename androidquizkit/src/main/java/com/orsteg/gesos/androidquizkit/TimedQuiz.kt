@@ -1,5 +1,6 @@
 package com.orsteg.gesos.androidquizkit
 
+import android.app.Activity
 import android.content.Context
 import android.os.Bundle
 import android.os.CountDownTimer
@@ -15,22 +16,32 @@ class TimedQuiz(val mQuiz: Quiz, val totalTimeInMillis: Long, val tickInterval: 
     override fun getQuiz(): Quiz = mQuiz
 
     override fun saveToHistory(isTemporal: Boolean) {
-        val head = if (isTemporal) "temp_" else ""
 
+        if (isTemporal) {
+            // save state
+            editPreferences().putLong("temp_quiz_tick_time", tickTime)
+        } else {
+            // save stats
+            editPreferences().putLong("quiz_finish_time", tickTime)
+        }
     }
 
     override fun saveToBundle(outState: Bundle?) {
         outState?.apply {
-
+            putLong("quiz_tick_time", tickTime)
         }
     }
 
     override fun restoreState(inState: Bundle?, timeStamp: Long?, isTemporal: Boolean) {
         inState?.apply {
-
+            tickTime = getLong("quiz_tick_time")
         }?:timeStamp?.apply {
-            val head = if (isTemporal) "temp_" else ""
+            if (isTemporal) {
+                // restore state
+                tickTime = getPreferences().getLong("temp_quiz_tick_time", 0L)
+            } else {
 
+            }
         }
     }
 
@@ -44,6 +55,10 @@ class TimedQuiz(val mQuiz: Quiz, val totalTimeInMillis: Long, val tickInterval: 
 
         }
     }
+
+    private fun getPreferences() = mQuiz.getContext().getSharedPreferences("quiz_time_history", Activity.MODE_PRIVATE)
+
+    private fun editPreferences() = getPreferences().edit()
 
     fun pause() {
         if (isPlaying) {
