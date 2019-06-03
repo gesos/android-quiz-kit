@@ -25,11 +25,36 @@ class TestActivity: AppCompatActivity() {
 
         builder.getQuiz(quizConfig, object : Quiz.OnBuildListener {
             override fun onFinishBuild(quiz: Quiz) {
+                // not on UI thread
                 mQuiz = TimedQuiz(quiz, 6000)
                 QuizHistory.restoreState(mQuiz, savedInstanceState)
                 mQuiz.getCurrentQuestionSet()
             }
         })
+
+    }
+
+    fun startQuiz() {
+        mQuiz.apply {
+            onTimeChangeListener = object : TimedQuiz.OnTimeChangeListener {
+                override fun onTimerTick(passedTimeInMillis: Long) {
+                    // not on UI thread
+                    // update time TextView
+                }
+
+                override fun onTimerFinish() {
+                    // not on UI thread
+                    endQuiz()
+                }
+            }
+
+            getCurrentQuestionSet()
+
+            start()
+        }
+    }
+
+    fun endQuiz() {
 
     }
 

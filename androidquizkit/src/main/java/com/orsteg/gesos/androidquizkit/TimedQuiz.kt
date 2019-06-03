@@ -11,6 +11,7 @@ class TimedQuiz(val mQuiz: Quiz, val totalTimeInMillis: Long, val tickInterval: 
     private var mTimer: CountDownTimer? = null
     var isPlaying: Boolean = false
     var tickTime: Long = 0
+    var onTimeChangeListener: OnTimeChangeListener? = null
 
 
     override fun getQuiz(): Quiz = mQuiz
@@ -49,10 +50,13 @@ class TimedQuiz(val mQuiz: Quiz, val totalTimeInMillis: Long, val tickInterval: 
         override fun onFinish() {
             isPlaying = false
 
+            onTimeChangeListener?.onTimerFinish()
+
         }
         override fun onTick(millisUntilFinished: Long) {
             tickTime = totalTimeInMillis - millisUntilFinished
 
+            onTimeChangeListener?.onTimerTick(tickTime)
         }
     }
 
