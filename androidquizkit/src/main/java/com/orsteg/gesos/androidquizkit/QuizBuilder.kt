@@ -56,37 +56,28 @@ class QuizBuilder private constructor(private val context: Context, private val 
             var count: Int
             val data = ByteArray(1024)
             var parser = mBuilder.getQuizParser()?: mBuilder.getDefaultQuizParser()
+            var response: BaseQuizParser.State
 
             try {
 
                 loop@ while (run { count = buffer.read(data); count } != -1) {
 
-                    when (parser.append(data)) {
-                        BaseQuizParser.State.FORCE_FINISH -> {
-                            break@loop
-                        }
-                        BaseQuizParser.State.PARSE_ERROR -> {
-                            break@loop
-                        }
-                        BaseQuizParser.State.VALIDATION_FAILED -> {
-                            break@loop
-                        }
-                        BaseQuizParser.State.CHANGE_PARSER -> {
-                            if (mBuilder.getQuizParser() == null) {
+                    response = parser.append(data)
 
-                                // Code to choose new parser
-                                //val parserInfo = parser.mNewParser
+                    if (arrayOf(BaseQuizParser.State.FORCE_FINISH, BaseQuizParser.State.PARSE_ERROR,
+                            BaseQuizParser.State.VALIDATION_FAILED).contains(response)) break@loop
+                    else if (response == BaseQuizParser.State.CHANGE_PARSER) {
+                        if (mBuilder.getQuizParser() == null) {
 
-                                parser.cancel()
+                            // Code to choose new parser
+                            //val parserInfo = parser.mNewParser
 
-                                val new = QuizParser()
-                                parser.copy(new)
+                            parser.cancel()
 
-                                parser = new
-                            }
-                        }
-                        else -> {
-                            continue@loop
+                            val new = QuizParser()
+                            parser.copy(new)
+
+                            parser = new
                         }
                     }
 
