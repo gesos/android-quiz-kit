@@ -45,6 +45,8 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
         val i = set * size
         currentSet = set
 
+        if (id == 0L) setId()
+
         return getQuestionRange(i, min(i+size, getTotalQuestions() - 1))
     }
 
@@ -65,16 +67,14 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
             hasInit = true
         }
 
-        if (id == 0L) setId()
-
         return q
     }
 
     protected abstract fun fetchQuestion(index: Int): Question
 
+    // Config functions
     fun generateRandomStates() = Random().run { (0 until resolveQuestionCount()).map { this.nextInt(11) } }
 
-    // Config functions
     fun generateRandomIndexes() = (0 until getTotalQuestions()).toMutableList().apply {
         shuffle()
     }.subList(0, resolveQuestionCount()).apply {
@@ -91,18 +91,13 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
     }, getTotalQuestions() - 1)
 
     // Methods to help determine ranges
-    fun getSetCount() {
+    fun getSetCount() = getTotalQuestions() / getSetSize()
 
-    }
-    fun getSetSize() {
+    fun getSetSize() = mConfig.mSetSize
 
-    }
-    fun getLastSetSize() {
+    fun getLastSetSize() = (getTotalQuestions() % getSetSize()).let { if (it == 0) getSetSize() else it }
 
-    }
-    fun getSetForQuestionIndex() {
-
-    }
+    fun getSetForQuestionIndex(index: Int) = index / getSetSize()
 
 
 

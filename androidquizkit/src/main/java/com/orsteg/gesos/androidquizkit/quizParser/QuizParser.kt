@@ -15,13 +15,13 @@ class QuizParser: BaseQuizParser() {
     val tempQuestions = ArrayList<Question>()
 
     var mAnswerMarker: String = "*"
-        private set(value) {
-            field = value
+        set(value) {
+            if (value.isNotEmpty())field = value
         }
 
     var mOptionsCount: Int = 4
-        private set(value) {
-            field = value
+        set(value) {
+            if (value > 0) field = value
         }
 
     override fun validate(): Boolean {
@@ -54,13 +54,13 @@ class QuizParser: BaseQuizParser() {
                 if (!text.matches("\\s*".toRegex())) {
                     // Each 5th line starting from 0 represents the beginning of a new question
                     // While each 1st to 4th lines starting from 0 contains the options a - d
-                    val line = currentLine % 5
+                    val line = currentLine % mOptionsCount + 1
                     if (line == 0) {
 
                         // set the question text
                         question.question = text.replaceFirst("(\\s*)(\\d+)(\\.)(\\s*)".toRegex(), "")
 
-                    } else if (line in 1..4) {
+                    } else if (line in 1..mOptionsCount) {
 
                         // check if current option is the answer
                         val isAnswer = text.matches("(\\s*)(\\*)([abcd]+)(.*)".toRegex())
@@ -74,7 +74,7 @@ class QuizParser: BaseQuizParser() {
                         if (isAnswer) question.answer = question.options.size - 1
 
                         // check if the last option has been included to the question and add the question to the ArrayList
-                        if (line == 4) {
+                        if (line == mOptionsCount) {
 
                             // add question to ArrayList
                             tempQuestions.add(question)
@@ -83,7 +83,6 @@ class QuizParser: BaseQuizParser() {
                             question = Question()
                         }
                     }
-
 
                     currentLine++
                 }
