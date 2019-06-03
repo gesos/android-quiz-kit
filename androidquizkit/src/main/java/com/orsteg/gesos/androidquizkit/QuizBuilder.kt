@@ -1,5 +1,6 @@
 package com.orsteg.gesos.androidquizkit
 
+import android.app.Activity
 import android.content.Context
 import android.util.Log
 import com.orsteg.gesos.androidquizkit.quizParser.QuizParser
@@ -90,7 +91,9 @@ class QuizBuilder private constructor(private val context: Context, private val 
 
                     parser.getQuestions()?.apply { questions = this }
 
-                    notifyListener()
+                    (context as Activity).runOnUiThread {
+                        notifyListener()
+                    }
 
                 } else {
 

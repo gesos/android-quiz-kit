@@ -50,13 +50,16 @@ class TimedQuiz(val mQuiz: Quiz, val totalTimeInMillis: Long, val tickInterval: 
         override fun onFinish() {
             isPlaying = false
 
-            onTimeChangeListener?.onTimerFinish()
-
+            (mQuiz.getContext() as Activity).runOnUiThread {
+                onTimeChangeListener?.onTimerFinish()
+            }
         }
         override fun onTick(millisUntilFinished: Long) {
             tickTime = totalTimeInMillis - millisUntilFinished
 
-            onTimeChangeListener?.onTimerTick(tickTime)
+            (mQuiz.getContext() as Activity).runOnUiThread {
+                onTimeChangeListener?.onTimerTick(tickTime)
+            }
         }
     }
 
