@@ -5,7 +5,7 @@ import android.support.v7.app.AppCompatActivity
 
 class TestActivity: AppCompatActivity() {
 
-    var mQuiz: TimedQuiz? = null
+    lateinit var mQuiz: TimedQuiz
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,9 +25,9 @@ class TestActivity: AppCompatActivity() {
 
         builder.getQuiz(quizConfig, object : Quiz.OnBuildListener {
             override fun onFinishBuild(quiz: Quiz) {
-                val timedQuiz = TimedQuiz(quiz, 6000)
-                QuizHistory.restoreState(timedQuiz, savedInstanceState)
-                quiz.getCurrentQuestionSet()
+                mQuiz = TimedQuiz(quiz, 6000)
+                QuizHistory.restoreState(mQuiz, savedInstanceState)
+                mQuiz.getCurrentQuestionSet()
             }
         })
 

@@ -5,7 +5,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.min
 
-abstract class Quiz (var topic: String, private var mConfig: Config){
+abstract class Quiz (var topic: String, private var mConfig: Config): QuizController{
 
     var id: Long = 0
 
@@ -26,19 +26,19 @@ abstract class Quiz (var topic: String, private var mConfig: Config){
     }
 
     // Moves a pointer
-    fun getCurrentQuestionSet(): List<Question>  {
+    override fun getCurrentQuestionSet(): List<Question>  {
         return gotoQuestionSet(currentSet)
     }
 
-    fun nextQuestionSet(): List<Question>  {
+    override fun nextQuestionSet(): List<Question>  {
         return gotoQuestionSet(++currentSet)
     }
 
-    fun previousQuestionSet(): List<Question> {
+    override fun previousQuestionSet(): List<Question> {
         return gotoQuestionSet(--currentSet)
     }
 
-    fun gotoQuestionSet(set: Int): List<Question>  {
+    override fun gotoQuestionSet(set: Int): List<Question>  {
         val size = if (mConfig.mSetSize < 0) getTotalQuestions()
                     else mConfig.mSetSize
 
