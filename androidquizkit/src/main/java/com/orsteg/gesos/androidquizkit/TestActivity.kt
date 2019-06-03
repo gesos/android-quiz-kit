@@ -27,7 +27,7 @@ class TestActivity: AppCompatActivity() {
             override fun onFinishBuild(quiz: Quiz) {
                 mQuiz = TimedQuiz(quiz, 6000)
                 QuizHistory.restoreState(mQuiz, savedInstanceState)
-                mQuiz.getCurrentQuestionSet()
+                startQuiz()
             }
         })
 
