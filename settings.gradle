@@ -1,1 +1,1 @@
-include ':androidquizkit'
+include ':androidquizkit', ':sample'

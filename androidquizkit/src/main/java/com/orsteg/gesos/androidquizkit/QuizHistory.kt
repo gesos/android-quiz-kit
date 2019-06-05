@@ -171,7 +171,7 @@ class QuizHistory private constructor(context: Context) {
             answeredCount = answeredIndexes?.size ?: 0
             correctIndexes = getCorrectlyAnsweredIndexes(quiz)
             correctCount = correctIndexes?.size ?: 0
-            questionCount = quiz.getTotalQuestions()
+            questionCount = quiz.getTotalQuizQuestions()
         }
 
         constructor(

@@ -60,10 +60,11 @@ class QuizBuilder private constructor(private val context: Context, private val 
             var response: BaseQuizParser.State
 
             try {
+                Log.d("tg", "read start")
 
                 loop@ while (run { count = buffer.read(data); count } != -1) {
 
-                    response = parser.append(data)
+                    response = parser.append(data, count)
 
                     if (arrayOf(BaseQuizParser.State.FORCE_FINISH, BaseQuizParser.State.PARSE_ERROR,
                             BaseQuizParser.State.VALIDATION_FAILED).contains(response)) break@loop
@@ -84,10 +85,13 @@ class QuizBuilder private constructor(private val context: Context, private val 
 
                 }
 
+                Log.d("tg", "read finish")
+
                 if (arrayOf(
                         BaseQuizParser.State.FORCE_FINISH,
                         BaseQuizParser.State.PARSE_SUCCESS
                     ).contains(parser.finish())) {
+                    Log.d("tg", "parse finish success")
 
                     parser.getQuestions()?.apply { questions = this }
 
@@ -96,6 +100,7 @@ class QuizBuilder private constructor(private val context: Context, private val 
                     }
 
                 } else {
+                    Log.d("tg", "parse finish fail${parser.mState}")
 
                 }
 

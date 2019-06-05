@@ -1,22 +1,24 @@
 package com.orsteg.gesos.androidquizkit
 
+import android.util.Log
+
 abstract class BaseQuizParser {
 
     abstract val headerByteSize: Int
 
     var mNewParser: String = ""
-    var mState: State = State.IDLE
+    @Volatile var mState: State = State.IDLE
     var mBuffer: StringBuffer = StringBuffer()
-    var isParseComplete: Boolean = false
+    @Volatile var isParseComplete: Boolean = false
     var hasFinished: Boolean = false
     var mPointer: Int = 0
 
-    fun append(data: ByteArray): State {
+    fun append(data: ByteArray, size: Int): State {
 
         if (arrayOf(State.VALIDATION_FAILED, State.PARSE_ERROR,
                 State.FORCE_FINISH).contains(mState)) return mState
 
-        mBuffer.append(data)
+        mBuffer.append(String(data, 0, size))
 
         if (mBuffer.length >= headerByteSize && mState == State.IDLE) {
 
@@ -33,12 +35,14 @@ abstract class BaseQuizParser {
 
                         mPointer = parse(mPointer)
 
-                        if (mState == State.END_OT_DATA && mPointer == mBuffer.length -1) {
+                        if (mState == State.END_OT_DATA && mPointer == mBuffer.length) {
                             mState = State.PARSE_SUCCESS
                         }
+                        Log.d("tg", "return loop")
                     }
                 }
                 isParseComplete = true
+                Log.d("tg", isParseComplete.toString())
 
             }.start()
         }
@@ -53,7 +57,12 @@ abstract class BaseQuizParser {
                 mState = State.END_OT_DATA
             }
 
+            Log.d("tg", "waiting finish")
+
+
             while (!isParseComplete);
+
+            Log.d("tg", "finish complete")
 
             if (arrayOf(State.PARSE_SUCCESS, State.FORCE_FINISH).contains(mState)) {
                 onFinish()

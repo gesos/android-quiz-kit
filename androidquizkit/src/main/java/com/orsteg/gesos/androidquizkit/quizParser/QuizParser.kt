@@ -1,5 +1,6 @@
 package com.orsteg.gesos.androidquizkit.quizParser
 
+import android.util.Log
 import com.orsteg.gesos.androidquizkit.BaseQuizParser
 import com.orsteg.gesos.androidquizkit.Question
 import com.orsteg.gesos.androidquizkit.QuizBuilder
@@ -26,6 +27,7 @@ class QuizParser: BaseQuizParser() {
 
     override fun validate(): Boolean {
 
+        Log.d("tg", mBuffer.substring(0, headerByteSize))
         return mBuffer.substring(0, headerByteSize) == "<!QUIZ>"
     }
 
@@ -36,15 +38,17 @@ class QuizParser: BaseQuizParser() {
 
         var start: Int
         var end = 0
+        Log.d("tg", cursor.toString())
 
-        while (end != -1 && cursor != mBuffer.lastIndex) {
+        while (end != -1 && cursor != mBuffer.length) {
+            Log.d("tg", "parse loop")
 
             start = mBuffer.indexOf("\n", cursor)
             end = mBuffer.indexOf("\n", start + 1)
 
             if (end != -1 || mState == State.END_OT_DATA) {
 
-                if (mState == State.END_OT_DATA) {
+                if (mState == State.END_OT_DATA && end == -1) {
                     end = mBuffer.length
                 }
 
@@ -54,8 +58,9 @@ class QuizParser: BaseQuizParser() {
                 if (!text.matches("\\s*".toRegex())) {
                     // Each 5th line starting from 0 represents the beginning of a new question
                     // While each 1st to 4th lines starting from 0 contains the options a - d
-                    val line = currentLine % mOptionsCount + 1
+                    val line = currentLine % (mOptionsCount + 1)
                     if (line == 0) {
+
 
                         // set the question text
                         question.question = text.replaceFirst("(\\s*)(\\d+)(\\.)(\\s*)".toRegex(), "")
@@ -71,7 +76,10 @@ class QuizParser: BaseQuizParser() {
                         // add the option to the question
                         question.options.add(option)
 
-                        if (isAnswer) question.answer = question.options.size - 1
+                        if (isAnswer) {
+                            question.answer = question.options.size - 1
+                            Log.d("tg answer", text)
+                        }
 
                         // check if the last option has been included to the question and add the question to the ArrayList
                         if (line == mOptionsCount) {
@@ -95,6 +103,7 @@ class QuizParser: BaseQuizParser() {
     }
 
     override fun getQuestions(): List<Question>? {
+        Log.d("tg count", tempQuestions.size.toString())
         return tempQuestions
     }
 

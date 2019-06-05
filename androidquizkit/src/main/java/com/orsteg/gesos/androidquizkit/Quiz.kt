@@ -9,7 +9,7 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
 
     var id: Long = 0
 
-    var currentSet: Int = -1
+    var currentSet: Int = 0
 
     // State variables
     var questionIndexes: ArrayList<Int> = ArrayList()
@@ -27,6 +27,8 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
         id = Calendar.getInstance().timeInMillis
     }
 
+    fun getTotalQuizQuestions(): Int = resolveQuestionCount()
+
     // Moves a pointer
     override fun getCurrentQuestionSet(): List<Question>  {
         return gotoQuestionSet(currentSet)
@@ -41,7 +43,7 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
     }
 
     override fun gotoQuestionSet(set: Int): List<Question>  {
-        val size = if (mConfig.mSetSize < 0) getTotalQuestions()
+        val size = if (mConfig.mSetSize < 0) getTotalQuizQuestions()
                     else mConfig.mSetSize
 
         val i = set * size
@@ -49,7 +51,7 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
 
         if (id == 0L) setId()
 
-        return getQuestionRange(i, min(i+size, getTotalQuestions() - 1))
+        return getQuestionRange(i, min(i+size, getTotalQuizQuestions() - 1))
     }
 
     // Does not move pointer
@@ -93,11 +95,11 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
     }, getTotalQuestions() - 1)
 
     // Methods to help determine ranges
-    fun getSetCount() = getTotalQuestions() / getSetSize()
+    fun getSetCount() = getTotalQuizQuestions() / getSetSize()
 
     fun getSetSize() = mConfig.mSetSize
 
-    fun getLastSetSize() = (getTotalQuestions() % getSetSize()).let { if (it == 0) getSetSize() else it }
+    fun getLastSetSize() = (getTotalQuizQuestions() % getSetSize()).let { if (it == 0) getSetSize() else it }
 
     fun getSetForQuestionIndex(index: Int) = index / getSetSize()
 
