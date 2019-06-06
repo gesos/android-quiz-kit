@@ -40,22 +40,17 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
             finishTest()
         }
 
-        val builder : QuizBuilder = QuizBuilder.Builder(this).apply {
-            getDefaultQuizParser().apply {
-
-            }
-        }.build("physics", BuildMethod.fromResource(R.raw.sheet))
+        val builder : QuizBuilder = QuizBuilder.Builder(this)
+            .build("physics", BuildMethod.fromResource(R.raw.sheet))
 
 
-        val quizConfig : Quiz.Config = Quiz.Config().
-            randomizeOptions(false).
-            randomizeQuestions().
-            setCount(30).
-            maxSetSize(1)
+        val quizConfig : Quiz.Config = Quiz.Config()
+            .randomizeOptions(false)
+            .setCount(30)
 
         builder.getQuiz(quizConfig, object : Quiz.OnBuildListener {
             override fun onFinishBuild(quiz: Quiz) {
-                mQuiz = TimedQuiz(quiz, 1000 * 30)
+                mQuiz = TimedQuiz(quiz, 1000 * 120)
                 QuizHistory.restoreState(mQuiz, savedInstanceState)
                 startQuiz()
             }
@@ -64,12 +59,13 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
 
 
         next.setOnClickListener {
-            if (mQuiz.getQuiz().getTotalQuizQuestions() > 0)
+            if (mQuiz.getQuiz().getTotalQuizQuestions() > 0 && mQuiz.getQuiz().selectionState[mQuiz.getQuiz().currentSet] != null) {
                 if (limit < mQuiz.getQuiz().currentSet) {
                     checkAnswer()
                 } else {
                     nextQuestion()
                 }
+            }
         }
 
         previous.setOnClickListener {

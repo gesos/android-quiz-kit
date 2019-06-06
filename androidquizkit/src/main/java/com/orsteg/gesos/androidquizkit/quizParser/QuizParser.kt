@@ -3,7 +3,6 @@ package com.orsteg.gesos.androidquizkit.quizParser
 import android.util.Log
 import com.orsteg.gesos.androidquizkit.BaseQuizParser
 import com.orsteg.gesos.androidquizkit.Question
-import com.orsteg.gesos.androidquizkit.QuizBuilder
 
 class QuizParser: BaseQuizParser() {
 
@@ -41,14 +40,15 @@ class QuizParser: BaseQuizParser() {
         Log.d("tg", cursor.toString())
 
         while (end != -1 && cursor != mBuffer.length) {
-            Log.d("tg", "parse loop")
+            Log.d("tg", "parse loop $mCallerState")
 
             start = mBuffer.indexOf("\n", cursor)
             end = mBuffer.indexOf("\n", start + 1)
 
-            if (end != -1 || mState == State.END_OT_DATA) {
+            if (end != -1 || mCallerState == State.END_OT_READ) {
+                Log.d("tg", "parse loop 2")
 
-                if (mState == State.END_OT_DATA && end == -1) {
+                if (mCallerState == State.END_OT_READ && end == -1) {
                     end = mBuffer.length
                 }
 
@@ -56,6 +56,8 @@ class QuizParser: BaseQuizParser() {
 
                 // check for valid file line
                 if (!text.matches("\\s*".toRegex())) {
+                    Log.d("tg", "parse loop 3")
+
                     // Each 5th line starting from 0 represents the beginning of a new question
                     // While each 1st to 4th lines starting from 0 contains the options a - d
                     val line = currentLine % (mOptionsCount + 1)

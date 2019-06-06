@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.util.Log
 import com.orsteg.gesos.androidquizkit.quizParser.QuizParser
+import kotlinx.coroutines.*
 import java.io.BufferedInputStream
 import java.io.IOException
 import java.io.InputStream
@@ -26,7 +27,7 @@ class QuizBuilder private constructor(private val context: Context, private val 
             }
             BuildMethod.Method.STREAM -> {
                 mMethod.mStream?.apply {
-                    buildFromInputStream(this)
+                    buildFromInputStreamAsync(this)
                 }
             }
             BuildMethod.Method.STR -> {
@@ -42,33 +43,40 @@ class QuizBuilder private constructor(private val context: Context, private val 
     }
 
     private fun buildFromResource() {
-        mMethod.mRes?.apply {
-            buildFromInputStream(context.resources.openRawResource(this))
-        }
+            mMethod.mRes?.apply {
+                buildFromInputStreamAsync(context.resources.openRawResource(this))
+            }
+
     }
 
 
-    private fun buildFromInputStream(quizStream: InputStream) {
+    private fun buildFromInputStreamAsync(quizStream: InputStream) = runBlocking {
 
-        Thread {
+        GlobalScope.async {
             val buffer = BufferedInputStream(quizStream, 8192)
 
             // Holds the number of bytes read for each loop
-            var count: Int
+            var count = 0
             val data = ByteArray(1024)
             var parser = mBuilder.getQuizParser()?: mBuilder.getDefaultQuizParser()
-            var response: BaseQuizParser.State
+            var response: BaseQuizParser.State = BaseQuizParser.State.IDLE
 
             try {
                 Log.d("tg", "read start")
 
-                loop@ while (run { count = buffer.read(data); count } != -1) {
+                loop@ while (!arrayOf(BaseQuizParser.State.FORCE_FINISH, BaseQuizParser.State.PARSE_ERROR,
+                        BaseQuizParser.State.VALIDATION_FAILED, BaseQuizParser.State.PARSE_SUCCESS).contains(response)) {
 
-                    response = parser.append(data, count)
+                    if (count != -1) {
+                        count = buffer.read(data)
+                    }
+                    response = if (count != -1) {
+                        parser.append(data, count)
+                    } else {
+                        parser.finish()
+                    }
 
-                    if (arrayOf(BaseQuizParser.State.FORCE_FINISH, BaseQuizParser.State.PARSE_ERROR,
-                            BaseQuizParser.State.VALIDATION_FAILED).contains(response)) break@loop
-                    else if (response == BaseQuizParser.State.CHANGE_PARSER) {
+                    if (response == BaseQuizParser.State.CHANGE_PARSER) {
                         if (mBuilder.getQuizParser() == null) {
 
                             // Code to choose new parser
@@ -82,15 +90,15 @@ class QuizBuilder private constructor(private val context: Context, private val 
                             parser = new
                         }
                     }
-
                 }
+
 
                 Log.d("tg", "read finish")
 
                 if (arrayOf(
                         BaseQuizParser.State.FORCE_FINISH,
                         BaseQuizParser.State.PARSE_SUCCESS
-                    ).contains(parser.finish())) {
+                    ).contains(response)) {
                     Log.d("tg", "parse finish success")
 
                     parser.getQuestions()?.apply { questions = this }
@@ -115,7 +123,7 @@ class QuizBuilder private constructor(private val context: Context, private val 
             buffer.close()
             quizStream.close()
 
-        }.start()
+        }
     }
 
     private fun notifyListener() {

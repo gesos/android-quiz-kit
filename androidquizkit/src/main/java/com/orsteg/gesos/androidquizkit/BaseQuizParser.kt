@@ -1,91 +1,92 @@
 package com.orsteg.gesos.androidquizkit
 
 import android.util.Log
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 
 abstract class BaseQuizParser {
 
     abstract val headerByteSize: Int
 
     var mNewParser: String = ""
-    @Volatile var mState: State = State.IDLE
+    var mState: State = State.IDLE
+    var mCallerState: State = State.IDLE
     var mBuffer: StringBuffer = StringBuffer()
-    @Volatile var isParseComplete: Boolean = false
-    var hasFinished: Boolean = false
     var mPointer: Int = 0
 
+    var result: Deferred<State>? = null
+
     fun append(data: ByteArray, size: Int): State {
+
+        setCallerState(State.READ_START)
 
         if (arrayOf(State.VALIDATION_FAILED, State.PARSE_ERROR,
                 State.FORCE_FINISH).contains(mState)) return mState
 
         mBuffer.append(String(data, 0, size))
 
-        if (mBuffer.length >= headerByteSize && mState == State.IDLE) {
-
-            mState = State.VALIDATION_START
-
-            Thread{
-                if (!validate()) {
-                    mState = State.VALIDATION_FAILED
-                } else {
-                    mState = State.VALIDATION_SUCCESS
-
-                    while (!arrayOf(State.PARSE_ERROR, State.CANCELLED, State.PARSE_SUCCESS,
-                            State.FORCE_FINISH).contains(mState)) {
-
-                        mPointer = parse(mPointer)
-
-                        if (mState == State.END_OT_DATA && mPointer == mBuffer.length) {
-                            mState = State.PARSE_SUCCESS
-                        }
-                        Log.d("tg", "return loop")
-                    }
-                }
-                isParseComplete = true
-                Log.d("tg", isParseComplete.toString())
-
-            }.start()
+        if (mBuffer.length >= headerByteSize && result == null) {
+            startParsing()
         }
 
         return mState
     }
 
-    fun finish(): State {
+    fun startParsing() {
+        setState(State.VALIDATION_START)
 
-        if (!hasFinished) {
-            if (!arrayOf(State.FORCE_FINISH, State.VALIDATION_FAILED, State.PARSE_ERROR).contains(mState)) {
-                mState = State.END_OT_DATA
-            }
-
-            Log.d("tg", "waiting finish")
-
-
-            while (!isParseComplete);
-
-            Log.d("tg", "finish complete")
-
-            if (arrayOf(State.PARSE_SUCCESS, State.FORCE_FINISH).contains(mState)) {
-                onFinish()
+        result = GlobalScope.async {
+            if (!validate()) {
+                setState(State.VALIDATION_FAILED)
             } else {
-                onFailed()
-            }
+                setState(State.VALIDATION_SUCCESS)
 
-            hasFinished = true
+                while (!arrayOf(State.PARSE_ERROR, State.CANCELLED, State.PARSE_SUCCESS,
+                        State.FORCE_FINISH).contains(mState)) {
+
+                    mPointer = parse(mPointer)
+
+                    if (mCallerState == State.END_OT_READ && mPointer == mBuffer.length) {
+                        setState(State.PARSE_SUCCESS)
+                    }
+                    Log.d("tg", "return loop")
+                }
+            }
+            mState
         }
+    }
+
+    suspend fun finish(): State {
+
+        if (result == null) {
+            startParsing()
+        }
+
+        setCallerState(State.END_OT_READ)
+
+        if (arrayOf(State.PARSE_SUCCESS, State.FORCE_FINISH).contains(result?.await())) {
+            onFinish()
+        } else {
+            onFailed()
+        }
+
         return mState
     }
 
 
     fun cancel() {
-        mState = State.CANCELLED
+        mCallerState = State.CANCELLED
         onCancel()
     }
 
     fun setState(state: State) {
-        mState = state
+        if (mState != state) mState = state
     }
 
-    fun getState(): State = mState
+    fun setCallerState(state: State) {
+        if (mCallerState != state) mCallerState = state
+    }
 
     fun copy(parser: BaseQuizParser) {
         parser.mBuffer = mBuffer
@@ -96,8 +97,7 @@ abstract class BaseQuizParser {
         mPointer = 0
         mBuffer = StringBuffer()
         mState = State.IDLE
-        isParseComplete = false
-        hasFinished = false
+        mCallerState = State.IDLE
     }
 
     open fun onFinish() {
@@ -121,8 +121,8 @@ abstract class BaseQuizParser {
 
 
     enum class State {
-        IDLE, CANCELLED, END_OT_DATA, PARSE_SUCCESS, PARSE_ERROR, FORCE_FINISH, CHANGE_PARSER,
-        VALIDATION_START, VALIDATION_FAILED, VALIDATION_SUCCESS
+        IDLE, CANCELLED, END_OT_READ, PARSE_SUCCESS, PARSE_ERROR, FORCE_FINISH, CHANGE_PARSER,
+        VALIDATION_START, VALIDATION_FAILED, VALIDATION_SUCCESS, READ_START
     }
 
 }
