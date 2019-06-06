@@ -13,7 +13,7 @@ open class Question {
         if (config.mRandomizeOptions) {
 
             val seed = (initSeed + key + 5214) * question.length + 3142
-            val ids = (seed.toString() + "3142").toCharArray().map { (it.toInt() % 4) }
+            val ids = (seed.toString() + "3142").toCharArray().map { (it.toInt() % options.size) }
             val ar = ArrayList<Int>()
             for (i in ids) {
                 if (!ar.contains(i)) ar.add(i)
@@ -21,7 +21,7 @@ open class Question {
 
             val nOptions = (0 until options.size).map { "" }.toMutableList()
 
-            for (o in 0..3) {
+            for (o in 0 until options.size) {
                 nOptions[ar[o]] = options[o]
             }
 

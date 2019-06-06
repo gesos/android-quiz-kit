@@ -140,18 +140,6 @@ class QuizHistory private constructor(context: Context) {
         return if (l != -1) l else null
     }
 
-    interface HistoryInterface {
-
-        fun getQuiz(): Quiz
-
-        fun saveToHistory(isTemporal: Boolean = false)
-
-        fun saveToBundle(outState: Bundle?)
-
-        fun restoreState(inState: Bundle?, timeStamp: Long? = null, isTemporal: Boolean = false)
-
-    }
-
     class History(val topic: String, val timeStamp: Long, val qIndexes: List<Int>, val initS: List<Int>, val selectS: List<Int?>, val pointer: Int?)
 
     open class Stats() {

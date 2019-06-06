@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.os.CountDownTimer
 
 class TimedQuiz(val mQuiz: Quiz, val totalTimeInMillis: Long, val tickInterval: Long = INTERVAL_SECONDS)
-        : QuizHistory.HistoryInterface,  QuizController by mQuiz {
+        : HistoryInterface,  QuizController by mQuiz {
 
     private var mTimer: CountDownTimer? = null
     var isPlaying: Boolean = false
