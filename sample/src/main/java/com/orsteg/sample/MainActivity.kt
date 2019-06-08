@@ -4,6 +4,7 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.content.Intent
 import android.app.Activity
+import com.orsteg.gesos.androidquizkit.QuizHistory
 import kotlinx.android.synthetic.main.activity_main.*
 
 
@@ -27,8 +28,13 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
 
-        val prefs = getSharedPreferences("scores", Activity.MODE_PRIVATE)
-        score.text = prefs.getString("last_score", "0/0")
+        score.text = QuizHistory.getInstance(this).getAllStats().run {
+            if (isNotEmpty()) {
+                "${first().correctCount}/${first().questionCount}"
+            } else {
+                "0/0"
+            }
+        }
 
     }
 

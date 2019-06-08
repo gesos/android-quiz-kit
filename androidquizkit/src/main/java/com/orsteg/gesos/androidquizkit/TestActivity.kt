@@ -36,7 +36,7 @@ class TestActivity: AppCompatActivity() {
     fun startQuiz() {
         mQuiz.apply {
             onTimeChangeListener = object : TimedQuiz.OnTimeChangeListener {
-                override fun onTimerTick(passedTimeInMillis: Long) {
+                override fun onTimerTick(timeLeft: Long) {
                     // update time TextView
                 }
 

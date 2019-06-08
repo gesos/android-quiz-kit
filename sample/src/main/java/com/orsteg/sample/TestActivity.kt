@@ -13,6 +13,8 @@ import android.view.View
 import com.orsteg.gesos.androidquizkit.*
 import kotlinx.android.synthetic.main.activity_test.*
 import kotlinx.android.synthetic.main.option_item.view.*
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 class TestActivity: AppCompatActivity(), Result.EndTestListener {
@@ -20,13 +22,24 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
 
     lateinit var listener: AdapterView.OnItemClickListener
 
-    lateinit var mQuiz: TimedQuiz
+    var mQuiz: TimedQuiz? = null
 
     lateinit var optionAdapter: Options
 
     lateinit var dialog: LoaderDialog
 
+    var result: Result? = null
+
     var limit: Int = -1
+
+    val formatter = SimpleDateFormat("HH : mm : ss")
+
+    val date = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MILLISECOND, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MINUTE, 0)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,8 +63,11 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
 
         builder.getQuiz(quizConfig, object : Quiz.OnBuildListener {
             override fun onFinishBuild(quiz: Quiz) {
-                mQuiz = TimedQuiz(quiz, 1000 * 120)
-                QuizHistory.restoreState(mQuiz, savedInstanceState)
+                mQuiz = TimedQuiz(quiz, 1000 * 10)
+                QuizHistory.restoreState(mQuiz!!, savedInstanceState)
+                if (savedInstanceState != null) {
+                    limit = savedInstanceState.getInt("limit")
+                }
                 startQuiz()
             }
         })
@@ -59,8 +75,8 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
 
 
         next.setOnClickListener {
-            if (mQuiz.getQuiz().getTotalQuizQuestions() > 0 && mQuiz.getQuiz().selectionState[mQuiz.getQuiz().currentSet] != null) {
-                if (limit < mQuiz.getQuiz().currentSet) {
+            if (mQuiz!!.getQuiz().getTotalQuizQuestions() > 0 && mQuiz!!.getQuiz().selectionState[mQuiz!!.getQuiz().currentSet] != null) {
+                if (limit < mQuiz!!.getQuiz().currentSet) {
                     checkAnswer()
                 } else {
                     nextQuestion()
@@ -69,13 +85,13 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
         }
 
         previous.setOnClickListener {
-            if (mQuiz.getQuiz().currentSet > 0) previousQuestion()
+            if (mQuiz!!.getQuiz().currentSet > 0) previousQuestion()
         }
 
 
         listener = AdapterView.OnItemClickListener { adapterView, view, i, l ->
 
-            mQuiz.getQuiz().selectionState[mQuiz.getQuiz().currentSet] = i
+            mQuiz!!.getQuiz().selectionState[mQuiz!!.getQuiz().currentSet] = i
 
             optionAdapter.notifyDataSetChanged()
         }
@@ -88,13 +104,17 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
     }
 
     fun startQuiz() {
-        mQuiz.apply {
+        mQuiz?.apply {
             onTimeChangeListener = object : TimedQuiz.OnTimeChangeListener {
-                override fun onTimerTick(passedTimeInMillis: Long) {
+                override fun onTimerTick(timeLeft: Long) {
                     // update time TextView
+                    val time = (date.clone() as Calendar).apply { timeInMillis += timeLeft }
+
+                    timer.text = formatter.format(time.time)
                 }
 
                 override fun onTimerFinish() {
+                    timer.text = formatter.format(date.time)
                     finishTest()
                 }
             }
@@ -113,9 +133,23 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        mQuiz?.pause()
+        if (dialog.isShowing) dialog.dismiss()
+        if (result?.isShowing == true) result?.dismiss()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mQuiz?.start()
+    }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
+
+        QuizHistory.saveToBundle(mQuiz, outState)
+        outState.putInt("limit", limit)
 
     }
 
@@ -134,9 +168,9 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
         options.onItemClickListener = null
         next.text = "Next"
 
-        val q = mQuiz.previousQuestionSet()[0]
+        val q = mQuiz!!.previousQuestionSet()[0]
 
-        index.text = "(" + (mQuiz.getQuiz().currentSet + 1) + ")  of  (${mQuiz.getQuiz().getTotalQuizQuestions()})"
+        index.text = "(" + (mQuiz!!.getQuiz().currentSet + 1) + ")  of  (${mQuiz!!.getQuiz().getTotalQuizQuestions()})"
 
 
         question.text = q.question
@@ -146,11 +180,11 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
 
     fun nextQuestion(qs: Question? = null) {
 
-        if ((mQuiz.getQuiz().currentSet < mQuiz.getQuiz().getTotalQuizQuestions() - 1) || qs != null) {
+        if ((mQuiz!!.getQuiz().currentSet < mQuiz!!.getQuiz().getTotalQuizQuestions() - 1) || qs != null) {
 
-            val q = qs?:mQuiz.nextQuestionSet()[0]
+            val q = qs?:mQuiz!!.nextQuestionSet()[0]
 
-            if (mQuiz.getQuiz().currentSet > limit) {
+            if (mQuiz!!.getQuiz().currentSet > limit) {
                 options.onItemClickListener = listener
                 next.text = "Continue"
             } else {
@@ -158,26 +192,27 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
                 next.text = "Next"
             }
 
-            index.text = "(" + (mQuiz.getQuiz().currentSet + 1) + ")  of  (${mQuiz.getQuiz().getTotalQuizQuestions()})"
+            index.text = "(" + (mQuiz!!.getQuiz().currentSet + 1) + ")  of  (${mQuiz!!.getQuiz().getTotalQuizQuestions()})"
 
 
             question.text = q.question
             optionAdapter.setQuestion(q)
 
-        } else if (mQuiz.getQuiz().getTotalQuizQuestions() > 0) {
+        } else if (mQuiz!!.getQuiz().getTotalQuizQuestions() > 0) {
             finishTest()
         }
     }
 
     fun finishTest() {
 
-        mQuiz.cancel()
+        mQuiz!!.finish()
 
-        val correctCount = QuizHistory.Stats.getNmberOfCorrectAnswers(mQuiz.getQuiz())
-        val questionCount = mQuiz.getQuiz().getTotalQuizQuestions()
+        val correctCount = QuizHistory.Stats.getNumberOfCorrectAnswers(mQuiz!!.getQuiz())
+        val questionCount = mQuiz!!.getQuiz().getTotalQuizQuestions()
 
-        val res = Result(this, "$correctCount/$questionCount")
-        res.show()
+        result = Result(this, "$correctCount/$questionCount")
+        result?.show()
+        QuizHistory.getInstance(this).saveToHistory(mQuiz!!)
     }
 
     override fun end() {
@@ -219,11 +254,11 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
             view1.value.text = indexes[i] + getItem(i)
 
             if (q.key > limit) {
-                if (i == mQuiz.getQuiz().selectionState[q.key]) {
+                if (i == mQuiz!!.getQuiz().selectionState[q.key]) {
                     view1.state.setImageResource(android.R.drawable.checkbox_on_background)
                 }
             } else {
-                if (mQuiz.getQuiz().selectionState[q.key] == i) {
+                if (mQuiz!!.getQuiz().selectionState[q.key] == i) {
                     view1.state.setImageResource(R.drawable.ic_close_black_24dp)
                     view1.setBackgroundColor(context.resources.getColor(R.color.myRed))
                 }

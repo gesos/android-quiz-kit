@@ -57,23 +57,25 @@
         android:padding="5dp">
 
         <Button
-            android:id="@+id/previous"
-            android:layout_width="150dp"
-            android:layout_height="wrap_content"
-            android:background="@android:color/darker_gray"
-            android:text="Previous" />
+                android:id="@+id/previous"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:background="@android:color/darker_gray"
+                android:text="Previous"/>
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+        <TextView
+                android:text="00 : 00 : 00"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:id="@+id/timer" android:layout_weight="1"
+                android:textSize="24sp" android:textColor="@color/myGreen" android:gravity="center"
+                android:layout_marginLeft="10dp" android:layout_marginRight="10dp"/>
 
         <Button
-            android:id="@+id/next"
-            android:layout_width="150dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="right"
-            android:background="@android:color/holo_green_dark"
-            android:text="Continue" />
+                android:id="@+id/next"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:background="@android:color/holo_green_dark"
+                android:text="Continue"/>
     </LinearLayout>
 </LinearLayout>

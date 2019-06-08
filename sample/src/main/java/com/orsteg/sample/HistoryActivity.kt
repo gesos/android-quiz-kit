@@ -9,6 +9,7 @@ import android.app.Activity
 import android.content.Context
 import android.os.Bundle
 import android.view.View
+import com.orsteg.gesos.androidquizkit.QuizHistory
 import kotlinx.android.synthetic.main.activity_history.*
 
 
@@ -26,14 +27,11 @@ class HistoryActivity: AppCompatActivity() {
         dialog.show()
 
         Thread(Runnable {
-            val prefs = getSharedPreferences("scores", Activity.MODE_PRIVATE)
-
-            val c = prefs.getInt("history_c", 0)
 
             val s = ArrayList<String>()
 
-            for (i in 0 until c) {
-                s.add(prefs.getString("score" + (i + 1), "0/0"))
+            for (stat in QuizHistory.getInstance(this).getAllStats()) {
+                s.add("${stat.correctCount}/${stat.questionCount}")
             }
 
             h = History(this, s)

@@ -17,7 +17,7 @@ class QuizHistory private constructor(context: Context) {
                     Stats(getString("${it}_topic", "")?:"", it.toLong(), getStringSet("${it}_answers").toIntList(),
                         getStringSet("${it}_correct").toIntList(), getInt("${it}_count", 0))
                 }
-            }
+            }.sortedByDescending { stat -> stat.quizTimestamp }
 
     fun getStat(it: Long): Stats? {
         return getStat(it, Stats())
@@ -185,9 +185,9 @@ class QuizHistory private constructor(context: Context) {
 
         companion object {
 
-            fun getNmberOfAnsweredQuestions(quiz: Quiz) = getAnsweredIndexes(quiz).size
+            fun getNumberOfAnsweredQuestions(quiz: Quiz) = getAnsweredIndexes(quiz).size
 
-            fun getNmberOfCorrectAnswers(quiz: Quiz) = getCorrectlyAnsweredIndexes(quiz).size
+            fun getNumberOfCorrectAnswers(quiz: Quiz) = getCorrectlyAnsweredIndexes(quiz).size
             /**
              * Retrieves the indexes for all questions that has been answered
              */
@@ -258,11 +258,11 @@ class QuizHistory private constructor(context: Context) {
         }
 
         fun restoreState(quiz: Quiz, inState: Bundle?, timeStamp: Long? = null, isTemporal: Boolean = false) {
-            inState?.let {
+            (inState?.let {
                 getHistoryFromBundle(it)
             }?: timeStamp?.let {
                 getInstance(quiz.getContext()).getHistory(it, isTemporal)
-            }?.also {
+            })?.also {
                 quiz.apply {
                     id = it.timeStamp
                     topic = it.topic
