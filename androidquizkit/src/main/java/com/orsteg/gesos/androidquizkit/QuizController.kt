@@ -2,12 +2,15 @@ package com.orsteg.gesos.androidquizkit
 
 interface QuizController {
 
-    fun getCurrentQuestionSet(): List<Question>
+    fun getCurrentQuestionGroup(): List<Question>
 
-    fun nextQuestionSet(): List<Question>
+    fun nextQuestionGroup(): List<Question>
 
-    fun previousQuestionSet(): List<Question>
+    fun previousQuestionGroup(): List<Question>
 
-    fun gotoQuestionSet(set: Int): List<Question>
+    fun gotoQuestionGroup(group: Int): List<Question>
 
+    fun setSelection(index: Int)
+
+    fun getSelection()
 }

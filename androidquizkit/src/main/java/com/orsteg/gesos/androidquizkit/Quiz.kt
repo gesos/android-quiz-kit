@@ -9,7 +9,7 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
 
     var id: Long = 0
 
-    var currentSet: Int = 0
+    var currentGroup: Int = 0
 
     // State variables
     var questionIndexes: ArrayList<Int> = ArrayList()
@@ -30,24 +30,24 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
     fun getTotalQuizQuestions(): Int = resolveQuestionCount()
 
     // Moves a pointer
-    override fun getCurrentQuestionSet(): List<Question>  {
-        return gotoQuestionSet(currentSet)
+    override fun getCurrentQuestionGroup(): List<Question>  {
+        return gotoQuestionGroup(currentGroup)
     }
 
-    override fun nextQuestionSet(): List<Question>  {
-        return gotoQuestionSet(++currentSet)
+    override fun nextQuestionGroup(): List<Question>  {
+        return gotoQuestionGroup(++currentGroup)
     }
 
-    override fun previousQuestionSet(): List<Question> {
-        return gotoQuestionSet(--currentSet)
+    override fun previousQuestionGroup(): List<Question> {
+        return gotoQuestionGroup(--currentGroup)
     }
 
-    override fun gotoQuestionSet(set: Int): List<Question>  {
-        val size = if (mConfig.mSetSize < 0) getTotalQuizQuestions()
-                    else mConfig.mSetSize
+    override fun gotoQuestionGroup(group: Int): List<Question>  {
+        val size = if (mConfig.groupSize < 0) getTotalQuizQuestions()
+                    else mConfig.groupSize
 
-        val i = set * size
-        currentSet = set
+        val i = group * size
+        currentGroup = group
 
         if (id == 0L) setId()
 
@@ -74,6 +74,10 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
         return q
     }
 
+    fun Question.setSelection() {
+
+    }
+
     protected abstract fun fetchQuestion(index: Int): Question
 
     // Config functions
@@ -89,19 +93,19 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
         resolveQuestionCount()).toList()
 
     private fun resolveQuestionCount() = min(kotlin.run {
-        val n = mConfig.mQuestionCount
+        val n = mConfig.questionCount
         if (n < 0) getTotalQuestions() - 1
-        else mConfig.mQuestionCount
+        else mConfig.questionCount
     }, getTotalQuestions() - 1)
 
     // Methods to help determine ranges
-    fun getSetCount() = getTotalQuizQuestions() / getSetSize()
+    fun getGroupCount() = getTotalQuizQuestions() / getGroupSize()
 
-    fun getSetSize() = mConfig.mSetSize
+    fun getGroupSize() = mConfig.groupSize
 
-    fun getLastSetSize() = (getTotalQuizQuestions() % getSetSize()).let { if (it == 0) getSetSize() else it }
+    fun getLastGroupSize() = (getTotalQuizQuestions() % getGroupSize()).let { if (it == 0) getGroupSize() else it }
 
-    fun getSetForQuestionIndex(index: Int) = index / getSetSize()
+    fun getGroupForQuestionIndex(index: Int) = index / getGroupSize()
 
 
 
@@ -115,25 +119,25 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
 
     class Config {
 
-        var mRandomizeOptions: Boolean = true
-        var mRandomizeQuestions: Boolean = true
-        var mQuestionCount: Int = -1
-        var mSetSize: Int = 1
+        var randomizeOptions: Boolean = true
+        var randomizeQuestions: Boolean = true
+        var questionCount: Int = -1
+        var groupSize: Int = 1
 
         fun randomizeOptions(randomize: Boolean = true): Config {
-            mRandomizeOptions = randomize
+            randomizeOptions = randomize
             return this
         }
         fun randomizeQuestions(randomize: Boolean = true): Config {
-            mRandomizeQuestions = randomize
+            randomizeQuestions = randomize
             return this
         }
         fun setCount(count: Int): Config {
-            mQuestionCount = count
+            questionCount = count
             return this
         }
-        fun maxSetSize(size: Int): Config {
-            mSetSize = size
+        fun maxGroupSize(size: Int): Config {
+            groupSize = size
             return this
         }
     }

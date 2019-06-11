@@ -47,7 +47,7 @@ class BuildMethod private constructor(val mMethod: Method) {
             return BuildMethod(Method.STR).apply { mString = text }
         }
 
-        fun fromUrl(url: String): BuildMethod {
+        private fun fromUrl(url: String): BuildMethod {
             return BuildMethod(Method.URL).apply { mString = url }
         }
     }

@@ -112,7 +112,7 @@ class QuizHistory private constructor(context: Context) {
             .putString("$head${quiz.id}_maker", maker).apply()
 
         if (isTemporal) {
-            editor.putInt("$head${quiz.id}_pointer", quiz.currentSet).apply()
+            editor.putInt("$head${quiz.id}_pointer", quiz.currentGroup).apply()
         } else {
             // generate stats
             val stats = Stats(quiz)
@@ -228,7 +228,7 @@ class QuizHistory private constructor(context: Context) {
                     putIntegerArrayList("quiz_select", it.selectionState)
                     putString("quiz_topic", it.topic)
                     putString("quiz_maker", maker)
-                    putInt("quiz_pointer", it.currentSet)
+                    putInt("quiz_pointer", it.currentGroup)
                 }
             }
         }
@@ -268,7 +268,7 @@ class QuizHistory private constructor(context: Context) {
                     topic = it.topic
                     initStates = ArrayList<Int>().apply { addAll(it.initS)}
                     selectionState = ArrayList<Int?>().apply { addAll(it.selectS)}
-                    currentSet = it.pointer?:0
+                    currentGroup = it.pointer?:0
                     questionIndexes = ArrayList<Int>().apply { addAll(it.qIndexes)}
                 }
             }

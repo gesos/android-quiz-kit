@@ -4,7 +4,7 @@ import android.util.Log
 import com.orsteg.gesos.androidquizkit.BaseQuizParser
 import com.orsteg.gesos.androidquizkit.Question
 
-class QuizParser: BaseQuizParser() {
+class SimpleQuizParser: BaseQuizParser() {
 
     override val headerByteSize: Int = 7
 
@@ -27,26 +27,24 @@ class QuizParser: BaseQuizParser() {
     override fun validate(): Boolean {
 
         Log.d("tg", mBuffer.substring(0, headerByteSize))
-        return mBuffer.substring(0, headerByteSize) == "<!QUIZ>"
+        return mBuffer.substring(0, headerByteSize) == "<!QUIZ>".apply {
+            mPointer = mBuffer.indexOf(">")
+        }
     }
 
     override fun parse(pointer: Int): Int {
 
         var cursor = pointer
-        if (cursor == 0) cursor = mBuffer.indexOf(">")
 
         var start: Int
         var end = 0
-        Log.d("tg", cursor.toString())
 
         while (end != -1 && cursor != mBuffer.length) {
-            Log.d("tg", "parse loop $mCallerState")
 
             start = mBuffer.indexOf("\n", cursor)
             end = mBuffer.indexOf("\n", start + 1)
 
             if (end != -1 || mCallerState == State.END_OT_READ) {
-                Log.d("tg", "parse loop 2")
 
                 if (mCallerState == State.END_OT_READ && end == -1) {
                     end = mBuffer.length
@@ -56,16 +54,15 @@ class QuizParser: BaseQuizParser() {
 
                 // check for valid file line
                 if (!text.matches("\\s*".toRegex())) {
-                    Log.d("tg", "parse loop 3")
 
-                    // Each 5th line starting from 0 represents the beginning of a new question
+                    // Each 5th line starting from 0 represents the beginning of a new statement
                     // While each 1st to 4th lines starting from 0 contains the options a - d
                     val line = currentLine % (mOptionsCount + 1)
                     if (line == 0) {
 
 
-                        // set the question text
-                        question.question = text.replaceFirst("(\\s*)(\\d+)(\\.)(\\s*)".toRegex(), "")
+                        // set the statement text
+                        question.statement = text.replaceFirst("(\\s*)(\\d+)(\\.)(\\s*)".toRegex(), "")
 
                     } else if (line in 1..mOptionsCount) {
 
@@ -75,21 +72,20 @@ class QuizParser: BaseQuizParser() {
                         // get the option removing the options letter
                         val option = text.replaceFirst("(\\s*)([*abcd]+)(\\.)(\\s*)".toRegex(), "")
 
-                        // add the option to the question
+                        // add the option to the statement
                         question.options.add(option)
 
                         if (isAnswer) {
                             question.answer = question.options.size - 1
-                            Log.d("tg answer", text)
                         }
 
-                        // check if the last option has been included to the question and add the question to the ArrayList
+                        // check if the last option has been included to the statement and add the statement to the ArrayList
                         if (line == mOptionsCount) {
 
-                            // add question to ArrayList
+                            // add statement to ArrayList
                             tempQuestions.add(question)
 
-                            // init a new question
+                            // init a new statement
                             question = Question()
                         }
                     }
@@ -105,7 +101,6 @@ class QuizParser: BaseQuizParser() {
     }
 
     override fun getQuestions(): List<Question>? {
-        Log.d("tg count", tempQuestions.size.toString())
         return tempQuestions
     }
 

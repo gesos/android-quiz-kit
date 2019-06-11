@@ -3,7 +3,7 @@ package com.orsteg.gesos.androidquizkit
 import android.app.Activity
 import android.content.Context
 import android.util.Log
-import com.orsteg.gesos.androidquizkit.quizParser.QuizParser
+import com.orsteg.gesos.androidquizkit.quizParser.SimpleQuizParser
 import kotlinx.coroutines.*
 import java.io.BufferedInputStream
 import java.io.IOException
@@ -18,6 +18,8 @@ class QuizBuilder private constructor(private val context: Context, private val 
     // Quiz cache
     private var mQuiz: Quiz? = null
     private var mBuildListener: Quiz.OnBuildListener? = null
+    private var mCurrentParser: BaseQuizParser? = null
+    private var mCurrentProcess: Deferred<Unit>? = null
 
 
     init {
@@ -26,15 +28,13 @@ class QuizBuilder private constructor(private val context: Context, private val 
                 buildFromResource()
             }
             BuildMethod.Method.STREAM -> {
-                mMethod.mStream?.apply {
-                    buildFromInputStreamAsync(this)
-                }
+                buildFromStream()
             }
             BuildMethod.Method.STR -> {
-
+                buildFromStringAsync()
             }
             BuildMethod.Method.FILE -> {
-
+                buildFromFile()
             }
             BuildMethod.Method.URL -> {
 
@@ -42,17 +42,89 @@ class QuizBuilder private constructor(private val context: Context, private val 
         }
     }
 
-    private fun buildFromResource() {
-            mMethod.mRes?.apply {
-                buildFromInputStreamAsync(context.resources.openRawResource(this))
+    private fun buildFromStringAsync() = runBlocking {
+        mMethod.mString?.also {
+            mCurrentProcess = GlobalScope.async {
+                var parser = mBuilder.getQuizParser() ?: mBuilder.getDefaultQuizParser()
+                mCurrentParser = parser
+                var response: BaseQuizParser.State = BaseQuizParser.State.IDLE
+                var hasAppended = false
+
+                loop@ while (!arrayOf(
+                        BaseQuizParser.State.FORCE_FINISH, BaseQuizParser.State.PARSE_ERROR,
+                        BaseQuizParser.State.VALIDATION_FAILED, BaseQuizParser.State.PARSE_SUCCESS
+                    ).contains(response)
+                ) {
+
+                    response = if (!hasAppended) {
+                        hasAppended = true
+                        parser.append(it)
+                    } else {
+                        parser.finish()
+                    }
+
+                    if (response == BaseQuizParser.State.CHANGE_PARSER) {
+                        if (mBuilder.getQuizParser() == null) {
+
+                            /* Code to choose new parser
+                            val parserInfo = parser.mNewParser
+
+                            parser.cancel()
+
+                            val new = SimpleQuizParser()
+                            parser.copy(new)
+
+                            parser = new */
+                        }
+                    }
+                }
+
+                if (arrayOf(
+                        BaseQuizParser.State.FORCE_FINISH,
+                        BaseQuizParser.State.PARSE_SUCCESS
+                    ).contains(response)
+                ) {
+                    parser.getQuestions()?.apply { questions = this }
+
+                    (context as Activity).runOnUiThread {
+                        notifyListener()
+                    }
+
+                } else {
+
+                }
+
+                if (mBuilder.getQuizParser() == null) {
+                    mBuilder.setQuizParser(parser)
+                }
             }
 
+        }
+        return@runBlocking
+    }
+
+    private fun buildFromStream() {
+        mMethod.mStream?.apply {
+            buildFromInputStreamAsync(this)
+        }
+    }
+
+    private fun buildFromResource() {
+        mMethod.mRes?.apply {
+            buildFromInputStreamAsync(context.resources.openRawResource(this))
+        }
+    }
+
+    private fun buildFromFile() {
+        mMethod.mFile?.also {
+            buildFromInputStreamAsync(it.inputStream())
+        }
     }
 
 
     private fun buildFromInputStreamAsync(quizStream: InputStream) = runBlocking {
 
-        GlobalScope.async {
+        mCurrentProcess = GlobalScope.async {
             val buffer = BufferedInputStream(quizStream, 8192)
 
             // Holds the number of bytes read for each loop
@@ -62,7 +134,6 @@ class QuizBuilder private constructor(private val context: Context, private val 
             var response: BaseQuizParser.State = BaseQuizParser.State.IDLE
 
             try {
-                Log.d("tg", "read start")
 
                 loop@ while (!arrayOf(BaseQuizParser.State.FORCE_FINISH, BaseQuizParser.State.PARSE_ERROR,
                         BaseQuizParser.State.VALIDATION_FAILED, BaseQuizParser.State.PARSE_SUCCESS).contains(response)) {
@@ -71,7 +142,7 @@ class QuizBuilder private constructor(private val context: Context, private val 
                         count = buffer.read(data)
                     }
                     response = if (count != -1) {
-                        parser.append(data, count)
+                        parser.append(String(data, 0, count))
                     } else {
                         parser.finish()
                     }
@@ -79,27 +150,23 @@ class QuizBuilder private constructor(private val context: Context, private val 
                     if (response == BaseQuizParser.State.CHANGE_PARSER) {
                         if (mBuilder.getQuizParser() == null) {
 
-                            // Code to choose new parser
+                            /* Code to choose new parser
                             //val parserInfo = parser.mNewParser
 
                             parser.cancel()
 
-                            val new = QuizParser()
+                            val new = SimpleQuizParser()
                             parser.copy(new)
 
-                            parser = new
+                            parser = new */
                         }
                     }
                 }
-
-
-                Log.d("tg", "read finish")
 
                 if (arrayOf(
                         BaseQuizParser.State.FORCE_FINISH,
                         BaseQuizParser.State.PARSE_SUCCESS
                     ).contains(response)) {
-                    Log.d("tg", "parse finish success")
 
                     parser.getQuestions()?.apply { questions = this }
 
@@ -108,7 +175,6 @@ class QuizBuilder private constructor(private val context: Context, private val 
                     }
 
                 } else {
-                    Log.d("tg", "parse finish fail${parser.mState}")
 
                 }
 
@@ -122,8 +188,8 @@ class QuizBuilder private constructor(private val context: Context, private val 
 
             buffer.close()
             quizStream.close()
-
         }
+        return@runBlocking
     }
 
     private fun notifyListener() {
@@ -137,10 +203,11 @@ class QuizBuilder private constructor(private val context: Context, private val 
     }
 
     fun cancel() {
-
+        if (mCurrentProcess?.isActive == true) mCurrentProcess?.cancel()
+        mCurrentParser?.cancel()
     }
 
-    fun rebuild() {
+    private fun rebuild() {
 
     }
 
@@ -157,12 +224,12 @@ class QuizBuilder private constructor(private val context: Context, private val 
 
     class Builder(private val context: Context) {
 
-        private val defQuizParser: QuizParser = QuizParser()
+        private val defQuizParser: SimpleQuizParser = SimpleQuizParser()
         private var mQuizParser: BaseQuizParser? = null
 
         fun getQuizParser(): BaseQuizParser? = mQuizParser
 
-        fun getDefaultQuizParser(): QuizParser = defQuizParser
+        fun getDefaultQuizParser(): SimpleQuizParser = defQuizParser
 
         fun setQuizParser(parser: BaseQuizParser): Builder {
             mQuizParser = parser
@@ -178,7 +245,7 @@ class QuizBuilder private constructor(private val context: Context, private val 
     private inner class Quiz1(topic: String,val config: Config) : Quiz(topic, config) {
 
         override fun setupQuiz() {
-            questionIndexes.addAll(run { if (config.mRandomizeQuestions) generateRandomIndexes()
+            questionIndexes.addAll(run { if (config.randomizeQuestions) generateRandomIndexes()
                 else generateIndexes()})
             initStates.addAll(generateRandomStates())
             selectionState.addAll((0 until getTotalQuestions()).map { null })

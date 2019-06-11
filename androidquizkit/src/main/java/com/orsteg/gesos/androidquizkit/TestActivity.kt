@@ -21,10 +21,14 @@ class TestActivity: AppCompatActivity() {
             randomizeOptions().
             randomizeQuestions().
             setCount(30).
-            maxSetSize(5)
+            maxGroupSize(5)
 
         builder.getQuiz(quizConfig, object : Quiz.OnBuildListener {
             override fun onFinishBuild(quiz: Quiz) {
+
+                quiz.apply {
+
+                }
                 mQuiz = TimedQuiz(quiz, 6000)
                 QuizHistory.restoreState(mQuiz, savedInstanceState)
                 startQuiz()
@@ -45,7 +49,7 @@ class TestActivity: AppCompatActivity() {
                 }
             }
 
-            getCurrentQuestionSet()
+            getCurrentQuestionGroup()[0]
 
             start()
         }

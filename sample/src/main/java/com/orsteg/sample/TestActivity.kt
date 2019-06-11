@@ -17,7 +17,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 
-class TestActivity: AppCompatActivity(), Result.EndTestListener {
+class TestActivity: AppCompatActivity(), Result.EndTestListener, LoaderDialog.CancelBuildListener {
+
     private var prefs: SharedPreferences? = null
 
     lateinit var listener: AdapterView.OnItemClickListener
@@ -27,6 +28,8 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
     lateinit var optionAdapter: Options
 
     lateinit var dialog: LoaderDialog
+
+    lateinit var builder: QuizBuilder
 
     var result: Result? = null
 
@@ -53,7 +56,7 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
             finishTest()
         }
 
-        val builder : QuizBuilder = QuizBuilder.Builder(this)
+        builder = QuizBuilder.Builder(this)
             .build("physics", BuildMethod.fromResource(R.raw.sheet))
 
 
@@ -75,8 +78,8 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
 
 
         next.setOnClickListener {
-            if (mQuiz!!.getQuiz().getTotalQuizQuestions() > 0 && mQuiz!!.getQuiz().selectionState[mQuiz!!.getQuiz().currentSet] != null) {
-                if (limit < mQuiz!!.getQuiz().currentSet) {
+            if (mQuiz!!.getQuiz().getTotalQuizQuestions() > 0 && mQuiz!!.getQuiz().selectionState[mQuiz!!.getQuiz().currentGroup] != null) {
+                if (limit < mQuiz!!.getQuiz().currentGroup) {
                     checkAnswer()
                 } else {
                     nextQuestion()
@@ -85,13 +88,13 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
         }
 
         previous.setOnClickListener {
-            if (mQuiz!!.getQuiz().currentSet > 0) previousQuestion()
+            if (mQuiz!!.getQuiz().currentGroup > 0) previousQuestion()
         }
 
 
         listener = AdapterView.OnItemClickListener { adapterView, view, i, l ->
 
-            mQuiz!!.getQuiz().selectionState[mQuiz!!.getQuiz().currentSet] = i
+            mQuiz!!.getQuiz().selectionState[mQuiz!!.getQuiz().currentGroup] = i
 
             optionAdapter.notifyDataSetChanged()
         }
@@ -119,7 +122,7 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
                 }
             }
 
-            val q = getCurrentQuestionSet()[0]
+            val q = getCurrentQuestionGroup()[0]
 
             optionAdapter = Options(this@TestActivity)
 
@@ -168,23 +171,23 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
         options.onItemClickListener = null
         next.text = "Next"
 
-        val q = mQuiz!!.previousQuestionSet()[0]
+        val q = mQuiz!!.previousQuestionGroup()[0]
 
-        index.text = "(" + (mQuiz!!.getQuiz().currentSet + 1) + ")  of  (${mQuiz!!.getQuiz().getTotalQuizQuestions()})"
+        index.text = "(" + (mQuiz!!.getQuiz().currentGroup + 1) + ")  of  (${mQuiz!!.getQuiz().getTotalQuizQuestions()})"
 
 
-        question.text = q.question
+        question.text = q.statement
         optionAdapter.setQuestion(q)
 
     }
 
     fun nextQuestion(qs: Question? = null) {
 
-        if ((mQuiz!!.getQuiz().currentSet < mQuiz!!.getQuiz().getTotalQuizQuestions() - 1) || qs != null) {
+        if ((mQuiz!!.getQuiz().currentGroup < mQuiz!!.getQuiz().getTotalQuizQuestions() - 1) || qs != null) {
 
-            val q = qs?:mQuiz!!.nextQuestionSet()[0]
+            val q = qs?:mQuiz!!.nextQuestionGroup()[0]
 
-            if (mQuiz!!.getQuiz().currentSet > limit) {
+            if (mQuiz!!.getQuiz().currentGroup > limit) {
                 options.onItemClickListener = listener
                 next.text = "Continue"
             } else {
@@ -192,10 +195,10 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
                 next.text = "Next"
             }
 
-            index.text = "(" + (mQuiz!!.getQuiz().currentSet + 1) + ")  of  (${mQuiz!!.getQuiz().getTotalQuizQuestions()})"
+            index.text = "(" + (mQuiz!!.getQuiz().currentGroup + 1) + ")  of  (${mQuiz!!.getQuiz().getTotalQuizQuestions()})"
 
 
-            question.text = q.question
+            question.text = q.statement
             optionAdapter.setQuestion(q)
 
         } else if (mQuiz!!.getQuiz().getTotalQuizQuestions() > 0) {
@@ -218,6 +221,12 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
     override fun end() {
         finish()
     }
+
+    override fun cancel() {
+        builder.cancel()
+        finish()
+    }
+
 
     inner class Options(var context: Context) : BaseAdapter() {
 

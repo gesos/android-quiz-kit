@@ -14,17 +14,18 @@ abstract class BaseQuizParser {
     var mCallerState: State = State.IDLE
     var mBuffer: StringBuffer = StringBuffer()
     var mPointer: Int = 0
+    var shouldValidate: Boolean = true
 
     var result: Deferred<State>? = null
 
-    fun append(data: ByteArray, size: Int): State {
+    fun append(data: String): State {
 
         setCallerState(State.READ_START)
 
         if (arrayOf(State.VALIDATION_FAILED, State.PARSE_ERROR,
                 State.FORCE_FINISH).contains(mState)) return mState
 
-        mBuffer.append(String(data, 0, size))
+        mBuffer.append(data)
 
         if (mBuffer.length >= headerByteSize && result == null) {
             startParsing()
@@ -37,20 +38,19 @@ abstract class BaseQuizParser {
         setState(State.VALIDATION_START)
 
         result = GlobalScope.async {
-            if (!validate()) {
+            if (shouldValidate && !validate()) {
                 setState(State.VALIDATION_FAILED)
             } else {
                 setState(State.VALIDATION_SUCCESS)
 
-                while (!arrayOf(State.PARSE_ERROR, State.CANCELLED, State.PARSE_SUCCESS,
-                        State.FORCE_FINISH).contains(mState)) {
+                while (!arrayOf(State.PARSE_ERROR, State.PARSE_SUCCESS,
+                        State.FORCE_FINISH).contains(mState) && mCallerState == State.CANCELLED) {
 
                     mPointer = parse(mPointer)
 
                     if (mCallerState == State.END_OT_READ && mPointer == mBuffer.length) {
                         setState(State.PARSE_SUCCESS)
                     }
-                    Log.d("tg", "return loop")
                 }
             }
             mState
@@ -77,6 +77,7 @@ abstract class BaseQuizParser {
 
     fun cancel() {
         mCallerState = State.CANCELLED
+        if (result?.isActive == true) result?.cancel()
         onCancel()
     }
 
