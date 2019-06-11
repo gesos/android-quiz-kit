@@ -91,9 +91,9 @@ class QuizHistory private constructor(context: Context) {
         } else null
     }
 
-    fun saveToHistory(hInterface: HistoryInterface, isTemporal: Boolean = false) {
-        saveToHistory(hInterface.getQuiz(), isTemporal, hInterface::class.java.name)
-        hInterface.saveToHistory(isTemporal)
+    fun saveToHistory(hComponent: HistoryComponent, isTemporal: Boolean = false) {
+        saveToHistory(hComponent.getQuiz(), isTemporal, hComponent::class.java.name)
+        hComponent.saveToHistory(isTemporal)
     }
 
     fun saveToHistory(quiz: Quiz, isTemporal: Boolean = false, maker: String = this::class.java.name) {
@@ -112,7 +112,7 @@ class QuizHistory private constructor(context: Context) {
             .putString("$head${quiz.id}_maker", maker).apply()
 
         if (isTemporal) {
-            editor.putInt("$head${quiz.id}_pointer", quiz.currentGroup).apply()
+            editor.putInt("$head${quiz.id}_pointer", quiz.currentIndex).apply()
         } else {
             // generate stats
             val stats = Stats(quiz)
@@ -192,14 +192,14 @@ class QuizHistory private constructor(context: Context) {
              * Retrieves the indexes for all questions that has been answered
              */
             fun getAnsweredIndexes(quiz: Quiz): List<Int> {
-                return (0 until quiz.selectionState.size).filter { quiz.selectionState[it] != null }.map { it }
+                return (0 until quiz.selectionState.size).filter { quiz.getResult(it) != -1 }.map { it }
             }
 
             /**
              * Retrieves the indexes for all the correctly answered questions
              */
             fun getCorrectlyAnsweredIndexes(quiz: Quiz): List<Int> {
-                return getAnsweredIndexes(quiz).filter { quiz.selectionState[it] == quiz.getQuestion(it).answer }
+                return getAnsweredIndexes(quiz).filter { quiz.getResult(it) == 1 }
                     .map { it }
             }
         }
@@ -228,16 +228,16 @@ class QuizHistory private constructor(context: Context) {
                     putIntegerArrayList("quiz_select", it.selectionState)
                     putString("quiz_topic", it.topic)
                     putString("quiz_maker", maker)
-                    putInt("quiz_pointer", it.currentGroup)
+                    putInt("quiz_pointer", it.currentIndex)
                 }
             }
         }
 
-        fun saveToBundle(hInterface: HistoryInterface?, outState: Bundle?) {
-            saveToBundle(hInterface?.getQuiz(), outState, hInterface?.let {
+        fun saveToBundle(hComponent: HistoryComponent?, outState: Bundle?) {
+            saveToBundle(hComponent?.getQuiz(), outState, hComponent?.let {
                 it::class.java.name
             })
-            hInterface?.saveToBundle(outState)
+            hComponent?.saveToBundle(outState)
         }
 
         fun getBundleMaker(inState: Bundle?): String? = inState?.getString("quiz_maker")
@@ -268,16 +268,16 @@ class QuizHistory private constructor(context: Context) {
                     topic = it.topic
                     initStates = ArrayList<Int>().apply { addAll(it.initS)}
                     selectionState = ArrayList<Int?>().apply { addAll(it.selectS)}
-                    currentGroup = it.pointer?:0
+                    currentIndex = it.pointer?:0
                     questionIndexes = ArrayList<Int>().apply { addAll(it.qIndexes)}
                 }
             }
         }
 
-        fun restoreState(hInterface: HistoryInterface, inState: Bundle?, timeStamp: Long? = null, isTemporal: Boolean = false) {
-            restoreState(hInterface.getQuiz(), inState, timeStamp, isTemporal)
+        fun restoreState(hComponent: HistoryComponent, inState: Bundle?, timeStamp: Long? = null, isTemporal: Boolean = false) {
+            restoreState(hComponent.getQuiz(), inState, timeStamp, isTemporal)
 
-            hInterface.restoreState(inState, timeStamp, isTemporal)
+            hComponent.restoreState(inState, timeStamp, isTemporal)
         }
     }
 }

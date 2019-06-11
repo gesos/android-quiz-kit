@@ -9,7 +9,7 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
 
     var id: Long = 0
 
-    var currentGroup: Int = 0
+    var currentIndex: Int = 0
 
     // State variables
     var questionIndexes: ArrayList<Int> = ArrayList()
@@ -29,38 +29,57 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
 
     fun getTotalQuizQuestions(): Int = resolveQuestionCount()
 
+    override fun getQuestionCount(): Int {
+        return getTotalQuizQuestions()
+    }
+
+    override fun getCurrentQuestionIndex(): Int {
+        return currentIndex
+    }
+
     // Moves a pointer
-    override fun getCurrentQuestionGroup(): List<Question>  {
-        return gotoQuestionGroup(currentGroup)
+    override fun getCurrentQuestion(): Question  {
+        return gotoQuestion(currentIndex)
     }
 
-    override fun nextQuestionGroup(): List<Question>  {
-        return gotoQuestionGroup(++currentGroup)
+    override fun nextQuestion(): Question  {
+        return gotoQuestion(++currentIndex)
     }
 
-    override fun previousQuestionGroup(): List<Question> {
-        return gotoQuestionGroup(--currentGroup)
+    override fun previousQuestion(): Question {
+        return gotoQuestion(--currentIndex)
     }
 
-    override fun gotoQuestionGroup(group: Int): List<Question>  {
-        val size = if (mConfig.groupSize < 0) getTotalQuizQuestions()
-                    else mConfig.groupSize
-
-        val i = group * size
-        currentGroup = group
-
-        if (id == 0L) setId()
-
-        return getQuestionRange(i, min(i+size, getTotalQuizQuestions() - 1))
+    override fun gotoQuestion(index: Int): Question  {
+        return getQuestion(index)
     }
 
-    // Does not move pointer
-    fun getQuestionRange(startIndex: Int, stopIndex: Int) : List<Question> {
-        return getQuestions((startIndex..stopIndex).toList())
+    override fun setSelection(index: Int, selection: Int?) {
+        selectionState[index] = selection
     }
 
-    fun getQuestions(indexes: List<Int>): List<Question> {
-        return indexes.map { i -> getQuestion(i) }
+    override fun setSelection(selection: Int?) {
+        setSelection(currentIndex, selection)
+    }
+
+    override fun getSelection(index: Int): Int? {
+        return selectionState[index]
+    }
+
+    override fun getSelection(): Int? {
+        return getSelection(currentIndex)
+    }
+
+    override fun getResult(index: Int): Int {
+        return when (getSelection(index)) {
+            getQuestion(index).answer -> 1
+            null -> -1
+            else -> 0
+        }
+    }
+
+    override fun getResult(): Int {
+        return getResult(currentIndex)
     }
 
     fun getQuestion(index: Int): Question {
@@ -72,10 +91,6 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
         }
 
         return q
-    }
-
-    fun Question.setSelection() {
-
     }
 
     protected abstract fun fetchQuestion(index: Int): Question
@@ -98,16 +113,6 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
         else mConfig.questionCount
     }, getTotalQuestions() - 1)
 
-    // Methods to help determine ranges
-    fun getGroupCount() = getTotalQuizQuestions() / getGroupSize()
-
-    fun getGroupSize() = mConfig.groupSize
-
-    fun getLastGroupSize() = (getTotalQuizQuestions() % getGroupSize()).let { if (it == 0) getGroupSize() else it }
-
-    fun getGroupForQuestionIndex(index: Int) = index / getGroupSize()
-
-
 
     interface QuizInterface {
         fun getQuiz(config: Config, listener: OnBuildListener)
@@ -122,7 +127,6 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
         var randomizeOptions: Boolean = true
         var randomizeQuestions: Boolean = true
         var questionCount: Int = -1
-        var groupSize: Int = 1
 
         fun randomizeOptions(randomize: Boolean = true): Config {
             randomizeOptions = randomize
@@ -134,10 +138,6 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
         }
         fun setCount(count: Int): Config {
             questionCount = count
-            return this
-        }
-        fun maxGroupSize(size: Int): Config {
-            groupSize = size
             return this
         }
     }

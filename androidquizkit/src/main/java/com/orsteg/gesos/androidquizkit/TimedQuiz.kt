@@ -8,7 +8,7 @@ import android.util.Log
 import java.util.*
 
 class TimedQuiz(val mQuiz: Quiz, var totalTimeInMillis: Long, val tickInterval: Long = INTERVAL_SECONDS)
-        : HistoryInterface,  QuizController by mQuiz {
+        : HistoryComponent,  QuizController by mQuiz {
 
     private var mTimer: CountDownTimer? = null
     var isPlaying: Boolean = false

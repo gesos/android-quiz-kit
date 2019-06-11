@@ -78,8 +78,8 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener, LoaderDialog.Ca
 
 
         next.setOnClickListener {
-            if (mQuiz!!.getQuiz().getTotalQuizQuestions() > 0 && mQuiz!!.getQuiz().selectionState[mQuiz!!.getQuiz().currentGroup] != null) {
-                if (limit < mQuiz!!.getQuiz().currentGroup) {
+            if (mQuiz!!.getQuiz().getTotalQuizQuestions() > 0 && mQuiz!!.getSelection() != null) {
+                if (limit < mQuiz!!.getQuiz().currentIndex) {
                     checkAnswer()
                 } else {
                     nextQuestion()
@@ -88,13 +88,13 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener, LoaderDialog.Ca
         }
 
         previous.setOnClickListener {
-            if (mQuiz!!.getQuiz().currentGroup > 0) previousQuestion()
+            if (mQuiz!!.getQuiz().currentIndex > 0) previousQuestion()
         }
 
 
-        listener = AdapterView.OnItemClickListener { adapterView, view, i, l ->
+        listener = AdapterView.OnItemClickListener { _, _, i, _ ->
 
-            mQuiz!!.getQuiz().selectionState[mQuiz!!.getQuiz().currentGroup] = i
+            mQuiz!!.setSelection(i)
 
             optionAdapter.notifyDataSetChanged()
         }
@@ -122,7 +122,7 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener, LoaderDialog.Ca
                 }
             }
 
-            val q = getCurrentQuestionGroup()[0]
+            val q = getCurrentQuestion()
 
             optionAdapter = Options(this@TestActivity)
 
@@ -171,9 +171,9 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener, LoaderDialog.Ca
         options.onItemClickListener = null
         next.text = "Next"
 
-        val q = mQuiz!!.previousQuestionGroup()[0]
+        val q = mQuiz!!.previousQuestion()
 
-        index.text = "(" + (mQuiz!!.getQuiz().currentGroup + 1) + ")  of  (${mQuiz!!.getQuiz().getTotalQuizQuestions()})"
+        index.text = "(" + (mQuiz!!.getQuiz().currentIndex + 1) + ")  of  (${mQuiz!!.getQuiz().getTotalQuizQuestions()})"
 
 
         question.text = q.statement
@@ -183,11 +183,11 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener, LoaderDialog.Ca
 
     fun nextQuestion(qs: Question? = null) {
 
-        if ((mQuiz!!.getQuiz().currentGroup < mQuiz!!.getQuiz().getTotalQuizQuestions() - 1) || qs != null) {
+        if ((mQuiz!!.getQuiz().currentIndex < mQuiz!!.getQuiz().getTotalQuizQuestions() - 1) || qs != null) {
 
-            val q = qs?:mQuiz!!.nextQuestionGroup()[0]
+            val q = qs?:mQuiz!!.nextQuestion()
 
-            if (mQuiz!!.getQuiz().currentGroup > limit) {
+            if (mQuiz!!.getQuiz().currentIndex > limit) {
                 options.onItemClickListener = listener
                 next.text = "Continue"
             } else {
@@ -195,7 +195,7 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener, LoaderDialog.Ca
                 next.text = "Next"
             }
 
-            index.text = "(" + (mQuiz!!.getQuiz().currentGroup + 1) + ")  of  (${mQuiz!!.getQuiz().getTotalQuizQuestions()})"
+            index.text = "(" + (mQuiz!!.getQuiz().currentIndex + 1) + ")  of  (${mQuiz!!.getQuiz().getTotalQuizQuestions()})"
 
 
             question.text = q.statement
@@ -263,11 +263,11 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener, LoaderDialog.Ca
             view1.value.text = indexes[i] + getItem(i)
 
             if (q.key > limit) {
-                if (i == mQuiz!!.getQuiz().selectionState[q.key]) {
+                if (i == mQuiz!!.getSelection()) {
                     view1.state.setImageResource(android.R.drawable.checkbox_on_background)
                 }
             } else {
-                if (mQuiz!!.getQuiz().selectionState[q.key] == i) {
+                if (mQuiz!!.getSelection() == i) {
                     view1.state.setImageResource(R.drawable.ic_close_black_24dp)
                     view1.setBackgroundColor(context.resources.getColor(R.color.myRed))
                 }

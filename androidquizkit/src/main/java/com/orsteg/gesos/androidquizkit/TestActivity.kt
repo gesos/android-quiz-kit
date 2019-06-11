@@ -20,8 +20,7 @@ class TestActivity: AppCompatActivity() {
         val quizConfig : Quiz.Config = Quiz.Config().
             randomizeOptions().
             randomizeQuestions().
-            setCount(30).
-            maxGroupSize(5)
+            setCount(30)
 
         builder.getQuiz(quizConfig, object : Quiz.OnBuildListener {
             override fun onFinishBuild(quiz: Quiz) {
@@ -49,7 +48,7 @@ class TestActivity: AppCompatActivity() {
                 }
             }
 
-            getCurrentQuestionGroup()[0]
+            getCurrentQuestion()
 
             start()
         }
