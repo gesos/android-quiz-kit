@@ -1,13 +1,15 @@
-package com.orsteg.gesos.androidquizkit
+package com.orsteg.gesos.androidquizkit.components
 
 import android.app.Activity
 import android.content.Context
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.util.Log
+import com.orsteg.gesos.androidquizkit.quiz.Quiz
+import com.orsteg.gesos.androidquizkit.quiz.QuizController
 import java.util.*
 
-class TimedQuiz(val mQuiz: Quiz, var totalTimeInMillis: Long, val tickInterval: Long = INTERVAL_SECONDS)
+class QuizTimer(val mQuiz: Quiz, var totalTimeInMillis: Long, val tickInterval: Long = INTERVAL_SECONDS)
         : HistoryComponent,  QuizController by mQuiz {
 
     private var mTimer: CountDownTimer? = null
@@ -38,7 +40,8 @@ class TimedQuiz(val mQuiz: Quiz, var totalTimeInMillis: Long, val tickInterval: 
         }
     }
 
-    private fun getPreferences() = Companion.getPreferences(mQuiz.getContext())
+    private fun getPreferences() =
+        getPreferences(mQuiz.getContext())
 
     private fun editPreferences() = getPreferences().edit()
 
@@ -82,7 +85,6 @@ class TimedQuiz(val mQuiz: Quiz, var totalTimeInMillis: Long, val tickInterval: 
 
     fun start() {
         if (!isPlaying && !hasFinished) {
-            Log.d("timer", "on start $hasFinished")
             // calculate new tick time
             if (lastPauseTime != -1L) {
                 tickTime += Calendar.getInstance().timeInMillis - lastPauseTime
@@ -109,7 +111,6 @@ class TimedQuiz(val mQuiz: Quiz, var totalTimeInMillis: Long, val tickInterval: 
             isPlaying = false
             lastPauseTime = Calendar.getInstance().timeInMillis
         }
-        Log.d("timer", "on pause $hasFinished")
     }
 
     fun suspend() {
@@ -155,10 +156,14 @@ class TimedQuiz(val mQuiz: Quiz, var totalTimeInMillis: Long, val tickInterval: 
 
         private fun getPreferences(context: Context) = context.getSharedPreferences("timed_quiz_history", Activity.MODE_PRIVATE)
 
-        private fun editPreferences(context: Context) = getPreferences(context).edit()
+        private fun editPreferences(context: Context) = getPreferences(
+            context
+        ).edit()
 
         fun getStat(context: Context, id: Long): TimedStats? {
-             return QuizHistory.getInstance(context).getStat(id, TimedStats())?.apply {
+             return QuizHistory.getInstance(context).getStat(id,
+                 TimedStats()
+             )?.apply {
                  getPreferences(context).also {
                      totalTime = it.getLong("${id}_quiz_total_time", 0)
                      finishTime = it.getLong("${id}_quiz_tick_time", 0)

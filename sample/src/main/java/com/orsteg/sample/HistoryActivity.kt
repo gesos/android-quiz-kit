@@ -5,11 +5,10 @@ import android.widget.TextView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.BaseAdapter
-import android.app.Activity
 import android.content.Context
 import android.os.Bundle
 import android.view.View
-import com.orsteg.gesos.androidquizkit.QuizHistory
+import com.orsteg.gesos.androidquizkit.components.QuizHistory
 import kotlinx.android.synthetic.main.activity_history.*
 
 

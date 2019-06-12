@@ -1,8 +1,7 @@
-package com.orsteg.gesos.androidquizkit.quizParser
+package com.orsteg.gesos.androidquizkit.parsers
 
 import android.util.Log
-import com.orsteg.gesos.androidquizkit.BaseQuizParser
-import com.orsteg.gesos.androidquizkit.Question
+import com.orsteg.gesos.androidquizkit.quiz.Question
 
 class SimpleQuizParser: BaseQuizParser() {
 
@@ -27,12 +26,14 @@ class SimpleQuizParser: BaseQuizParser() {
     override fun validate(): Boolean {
 
         Log.d("tg", mBuffer.substring(0, headerByteSize))
-        return mBuffer.substring(0, headerByteSize) == "<!QUIZ>".apply {
-            mPointer = mBuffer.indexOf(">")
-        }
+        val result = mBuffer.substring(0, headerByteSize) == "<!QUIZ>"
+
+        if (result) mPointer = mBuffer.indexOf(">")
+        return result
     }
 
     override fun parse(pointer: Int): Int {
+        Log.d("tg", "parse $pointer")
 
         var cursor = pointer
 
@@ -40,6 +41,7 @@ class SimpleQuizParser: BaseQuizParser() {
         var end = 0
 
         while (end != -1 && cursor != mBuffer.length) {
+            Log.d("tg", "parsing $pointer")
 
             start = mBuffer.indexOf("\n", cursor)
             end = mBuffer.indexOf("\n", start + 1)

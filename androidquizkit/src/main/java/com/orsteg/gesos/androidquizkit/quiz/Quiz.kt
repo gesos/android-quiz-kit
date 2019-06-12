@@ -1,11 +1,12 @@
-package com.orsteg.gesos.androidquizkit
+package com.orsteg.gesos.androidquizkit.quiz
 
 import android.content.Context
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.min
 
-abstract class Quiz (var topic: String, private var mConfig: Config): QuizController{
+abstract class Quiz (var topic: String, private var mConfig: Config):
+    QuizController {
 
     var id: Long = 0
 
@@ -38,11 +39,11 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
     }
 
     // Moves a pointer
-    override fun getCurrentQuestion(): Question  {
+    override fun getCurrentQuestion(): Question {
         return gotoQuestion(currentIndex)
     }
 
-    override fun nextQuestion(): Question  {
+    override fun nextQuestion(): Question {
         return gotoQuestion(++currentIndex)
     }
 
@@ -50,7 +51,7 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
         return gotoQuestion(--currentIndex)
     }
 
-    override fun gotoQuestion(index: Int): Question  {
+    override fun gotoQuestion(index: Int): Question {
         return getQuestion(index)
     }
 
@@ -83,6 +84,7 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
     }
 
     fun getQuestion(index: Int): Question {
+        if (id == 0L) setId()
         val q = fetchQuestion(index)
         if (!q.hasInit) q.apply {
             key = index

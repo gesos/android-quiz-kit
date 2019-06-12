@@ -1,6 +1,7 @@
-package com.orsteg.gesos.androidquizkit
+package com.orsteg.gesos.androidquizkit.parsers
 
 import android.util.Log
+import com.orsteg.gesos.androidquizkit.quiz.Question
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -22,8 +23,11 @@ abstract class BaseQuizParser {
 
         setCallerState(State.READ_START)
 
-        if (arrayOf(State.VALIDATION_FAILED, State.PARSE_ERROR,
-                State.FORCE_FINISH).contains(mState)) return mState
+        if (arrayOf(
+                State.VALIDATION_FAILED,
+                State.PARSE_ERROR,
+                State.FORCE_FINISH
+            ).contains(mState)) return mState
 
         mBuffer.append(data)
 
@@ -43,8 +47,14 @@ abstract class BaseQuizParser {
             } else {
                 setState(State.VALIDATION_SUCCESS)
 
-                while (!arrayOf(State.PARSE_ERROR, State.PARSE_SUCCESS,
-                        State.FORCE_FINISH).contains(mState) && mCallerState == State.CANCELLED) {
+                Log.d("tg", "validation success")
+
+                while (!arrayOf(
+                        State.PARSE_ERROR,
+                        State.PARSE_SUCCESS,
+                        State.FORCE_FINISH
+                    ).contains(mState) && mCallerState != State.CANCELLED
+                ) {
 
                     mPointer = parse(mPointer)
 
@@ -65,7 +75,10 @@ abstract class BaseQuizParser {
 
         setCallerState(State.END_OT_READ)
 
-        if (arrayOf(State.PARSE_SUCCESS, State.FORCE_FINISH).contains(result?.await())) {
+        if (arrayOf(
+                State.PARSE_SUCCESS,
+                State.FORCE_FINISH
+            ).contains(result?.await())) {
             onFinish()
         } else {
             onFailed()

@@ -1,9 +1,10 @@
-package com.orsteg.gesos.androidquizkit
+package com.orsteg.gesos.androidquizkit.components
 
 import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
+import com.orsteg.gesos.androidquizkit.quiz.Quiz
 
 
 class QuizHistory private constructor(context: Context) {
@@ -14,8 +15,10 @@ class QuizHistory private constructor(context: Context) {
     fun getAllStats(): List<Stats> = pref.getStringSet("quiz_ids")
             .map {
                 pref.run {
-                    Stats(getString("${it}_topic", "")?:"", it.toLong(), getStringSet("${it}_answers").toIntList(),
-                        getStringSet("${it}_correct").toIntList(), getInt("${it}_count", 0))
+                    Stats(
+                        getString("${it}_topic", "") ?: "", it.toLong(), getStringSet("${it}_answers").toIntList(),
+                        getStringSet("${it}_correct").toIntList(), getInt("${it}_count", 0)
+                    )
                 }
             }.sortedByDescending { stat -> stat.quizTimestamp }
 
@@ -75,7 +78,7 @@ class QuizHistory private constructor(context: Context) {
         return if (pref.getStringSet("${head}quiz_ids").contains(it.toString())) {
             pref.run {
                 History(
-                    getString("$head${it}_topic", "")?:"", it, getStringSet("$head${it}_index").toIntList(),
+                    getString("$head${it}_topic", "") ?: "", it, getStringSet("$head${it}_index").toIntList(),
                     getStringSet("$head${it}_init").toIntList(), getStringSet("$head${it}_select").toNullableIntList(),
                     getNullableInt("$head${it}_pointer")
                 )
@@ -155,9 +158,11 @@ class QuizHistory private constructor(context: Context) {
         constructor(quiz: Quiz) : this() {
             topic = quiz.topic
             quizTimestamp = quiz.id
-            answeredIndexes = getAnsweredIndexes(quiz)
+            answeredIndexes =
+                getAnsweredIndexes(quiz)
             answeredCount = answeredIndexes?.size ?: 0
-            correctIndexes = getCorrectlyAnsweredIndexes(quiz)
+            correctIndexes =
+                getCorrectlyAnsweredIndexes(quiz)
             correctCount = correctIndexes?.size ?: 0
             questionCount = quiz.getTotalQuizQuestions()
         }
@@ -185,9 +190,13 @@ class QuizHistory private constructor(context: Context) {
 
         companion object {
 
-            fun getNumberOfAnsweredQuestions(quiz: Quiz) = getAnsweredIndexes(quiz).size
+            fun getNumberOfAnsweredQuestions(quiz: Quiz) = getAnsweredIndexes(
+                quiz
+            ).size
 
-            fun getNumberOfCorrectAnswers(quiz: Quiz) = getCorrectlyAnsweredIndexes(quiz).size
+            fun getNumberOfCorrectAnswers(quiz: Quiz) = getCorrectlyAnsweredIndexes(
+                quiz
+            ).size
             /**
              * Retrieves the indexes for all questions that has been answered
              */
@@ -211,12 +220,13 @@ class QuizHistory private constructor(context: Context) {
 
         fun getInstance(context: Context): QuizHistory {
             if (instance == null){
-                instance = QuizHistory(context)
+                instance =
+                    QuizHistory(context)
             }
             return instance!!
         }
 
-        fun saveToBundle(quiz: Quiz?, outState: Bundle?,  maker: String? = this::class.java.name) {
+        fun saveToBundle(quiz: Quiz?, outState: Bundle?, maker: String? = this::class.java.name) {
             outState?.apply {
                 quiz?.also {
                     // save quiz id
@@ -234,9 +244,12 @@ class QuizHistory private constructor(context: Context) {
         }
 
         fun saveToBundle(hComponent: HistoryComponent?, outState: Bundle?) {
-            saveToBundle(hComponent?.getQuiz(), outState, hComponent?.let {
-                it::class.java.name
-            })
+            saveToBundle(
+                hComponent?.getQuiz(),
+                outState,
+                hComponent?.let {
+                    it::class.java.name
+                })
             hComponent?.saveToBundle(outState)
         }
 
@@ -247,9 +260,9 @@ class QuizHistory private constructor(context: Context) {
                 inState.run {
                     History(
                         getString("quiz_topic") ?: "", getLong("quiz_id"),
-                        getIntegerArrayList("quiz_index")?: arrayListOf(),
-                        getIntegerArrayList("quiz_init")?: arrayListOf(),
-                        getIntegerArrayList("quiz_select")?: arrayListOf(),
+                        getIntegerArrayList("quiz_index") ?: arrayListOf(),
+                        getIntegerArrayList("quiz_init") ?: arrayListOf(),
+                        getIntegerArrayList("quiz_select") ?: arrayListOf(),
                         getInt("quiz_pointer")
                     )
 
@@ -261,7 +274,8 @@ class QuizHistory private constructor(context: Context) {
             (inState?.let {
                 getHistoryFromBundle(it)
             }?: timeStamp?.let {
-                getInstance(quiz.getContext()).getHistory(it, isTemporal)
+                getInstance(quiz.getContext())
+                    .getHistory(it, isTemporal)
             })?.also {
                 quiz.apply {
                     id = it.timeStamp
@@ -275,7 +289,12 @@ class QuizHistory private constructor(context: Context) {
         }
 
         fun restoreState(hComponent: HistoryComponent, inState: Bundle?, timeStamp: Long? = null, isTemporal: Boolean = false) {
-            restoreState(hComponent.getQuiz(), inState, timeStamp, isTemporal)
+            restoreState(
+                hComponent.getQuiz(),
+                inState,
+                timeStamp,
+                isTemporal
+            )
 
             hComponent.restoreState(inState, timeStamp, isTemporal)
         }

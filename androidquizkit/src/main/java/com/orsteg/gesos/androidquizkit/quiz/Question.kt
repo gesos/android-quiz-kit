@@ -1,4 +1,4 @@
-package com.orsteg.gesos.androidquizkit
+package com.orsteg.gesos.androidquizkit.quiz
 
 import kotlin.collections.ArrayList
 

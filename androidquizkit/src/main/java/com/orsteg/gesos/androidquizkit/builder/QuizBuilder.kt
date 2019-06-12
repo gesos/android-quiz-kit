@@ -1,16 +1,20 @@
-package com.orsteg.gesos.androidquizkit
+package com.orsteg.gesos.androidquizkit.builder
 
 import android.app.Activity
 import android.content.Context
 import android.util.Log
-import com.orsteg.gesos.androidquizkit.quizParser.SimpleQuizParser
+import com.orsteg.gesos.androidquizkit.quiz.Question
+import com.orsteg.gesos.androidquizkit.quiz.Quiz
+import com.orsteg.gesos.androidquizkit.parsers.BaseQuizParser
+import com.orsteg.gesos.androidquizkit.parsers.SimpleQuizParser
 import kotlinx.coroutines.*
 import java.io.BufferedInputStream
 import java.io.IOException
 import java.io.InputStream
 
 class QuizBuilder private constructor(private val context: Context, private val topic: String, private val mBuilder: Builder,
-                                      private val mMethod: BuildMethod): Quiz.QuizInterface {
+                                      private val mMethod: BuildMethod
+): Quiz.QuizInterface {
 
     // Holds all the questions for the quiz
     var questions: List<Question> = listOf()
@@ -135,7 +139,8 @@ class QuizBuilder private constructor(private val context: Context, private val 
 
             try {
 
-                loop@ while (!arrayOf(BaseQuizParser.State.FORCE_FINISH, BaseQuizParser.State.PARSE_ERROR,
+                loop@ while (!arrayOf(
+                        BaseQuizParser.State.FORCE_FINISH, BaseQuizParser.State.PARSE_ERROR,
                         BaseQuizParser.State.VALIDATION_FAILED, BaseQuizParser.State.PARSE_SUCCESS).contains(response)) {
 
                     if (count != -1) {
@@ -183,7 +188,7 @@ class QuizBuilder private constructor(private val context: Context, private val 
                 }
 
             } catch (e: IOException) {
-                Log.d("Error", e.message)
+
             }
 
             buffer.close()
@@ -248,7 +253,7 @@ class QuizBuilder private constructor(private val context: Context, private val 
             questionIndexes.addAll(run { if (config.randomizeQuestions) generateRandomIndexes()
                 else generateIndexes()})
             initStates.addAll(generateRandomStates())
-            selectionState.addAll((0 until getTotalQuestions()).map { null })
+            selectionState.addAll((0 until getTotalQuizQuestions()).map { null })
         }
 
         override fun getTotalQuestions(): Int {
