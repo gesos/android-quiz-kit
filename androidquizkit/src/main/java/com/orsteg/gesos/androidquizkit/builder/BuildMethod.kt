@@ -1,4 +1,4 @@
-package com.orsteg.gesos.androidquizkit
+package com.orsteg.gesos.androidquizkit.builder
 
 import android.support.annotation.RawRes
 import java.io.File
@@ -32,23 +32,28 @@ class BuildMethod private constructor(val mMethod: Method) {
 
     companion object {
         fun fromInputStream(stream: InputStream): BuildMethod {
-            return BuildMethod(Method.STREAM).apply { mStream = stream }
+            return BuildMethod(Method.STREAM)
+                .apply { mStream = stream }
         }
 
         fun fromResource(@RawRes resId: Int): BuildMethod {
-            return BuildMethod(Method.RES).apply { mRes = resId }
+            return BuildMethod(Method.RES)
+                .apply { mRes = resId }
         }
 
         fun fromFile(file: File): BuildMethod {
-            return BuildMethod(Method.FILE).apply { mFile = file }
+            return BuildMethod(Method.FILE)
+                .apply { mFile = file }
         }
 
         fun fromString(text: String): BuildMethod {
-            return BuildMethod(Method.STR).apply { mString = text }
+            return BuildMethod(Method.STR)
+                .apply { mString = text }
         }
 
-        fun fromUrl(url: String): BuildMethod {
-            return BuildMethod(Method.URL).apply { mString = url }
+        private fun fromUrl(url: String): BuildMethod {
+            return BuildMethod(Method.URL)
+                .apply { mString = url }
         }
     }
 }

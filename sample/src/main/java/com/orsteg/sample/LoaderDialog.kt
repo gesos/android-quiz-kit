@@ -22,7 +22,7 @@ class LoaderDialog(private val cont: Context, private val cancelable: Boolean = 
         setContentView(R.layout.loader_layout)
 
         if (cancelable) setCancelable {
-            (cont as Result.EndTestListener).end()
+            (cont as CancelBuildListener).cancel()
         }
     }
 
@@ -32,6 +32,11 @@ class LoaderDialog(private val cont: Context, private val cancelable: Boolean = 
             dismiss()
             onAbort()
         }
+    }
+
+
+    interface CancelBuildListener {
+        fun cancel()
     }
 
 }

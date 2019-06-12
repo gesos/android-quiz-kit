@@ -1,15 +1,16 @@
-package com.orsteg.gesos.androidquizkit
+package com.orsteg.gesos.androidquizkit.quiz
 
 import android.content.Context
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.min
 
-abstract class Quiz (var topic: String, private var mConfig: Config): QuizController{
+abstract class Quiz (var topic: String, private var mConfig: Config):
+    QuizController {
 
     var id: Long = 0
 
-    var currentSet: Int = 0
+    var currentIndex: Int = 0
 
     // State variables
     var questionIndexes: ArrayList<Int> = ArrayList()
@@ -29,41 +30,61 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
 
     fun getTotalQuizQuestions(): Int = resolveQuestionCount()
 
+    override fun getQuestionCount(): Int {
+        return getTotalQuizQuestions()
+    }
+
+    override fun getCurrentQuestionIndex(): Int {
+        return currentIndex
+    }
+
     // Moves a pointer
-    override fun getCurrentQuestionSet(): List<Question>  {
-        return gotoQuestionSet(currentSet)
+    override fun getCurrentQuestion(): Question {
+        return gotoQuestion(currentIndex)
     }
 
-    override fun nextQuestionSet(): List<Question>  {
-        return gotoQuestionSet(++currentSet)
+    override fun nextQuestion(): Question {
+        return gotoQuestion(++currentIndex)
     }
 
-    override fun previousQuestionSet(): List<Question> {
-        return gotoQuestionSet(--currentSet)
+    override fun previousQuestion(): Question {
+        return gotoQuestion(--currentIndex)
     }
 
-    override fun gotoQuestionSet(set: Int): List<Question>  {
-        val size = if (mConfig.mSetSize < 0) getTotalQuizQuestions()
-                    else mConfig.mSetSize
-
-        val i = set * size
-        currentSet = set
-
-        if (id == 0L) setId()
-
-        return getQuestionRange(i, min(i+size, getTotalQuizQuestions() - 1))
+    override fun gotoQuestion(index: Int): Question {
+        return getQuestion(index)
     }
 
-    // Does not move pointer
-    fun getQuestionRange(startIndex: Int, stopIndex: Int) : List<Question> {
-        return getQuestions((startIndex..stopIndex).toList())
+    override fun setSelection(index: Int, selection: Int?) {
+        selectionState[index] = selection
     }
 
-    fun getQuestions(indexes: List<Int>): List<Question> {
-        return indexes.map { i -> getQuestion(i) }
+    override fun setSelection(selection: Int?) {
+        setSelection(currentIndex, selection)
+    }
+
+    override fun getSelection(index: Int): Int? {
+        return selectionState[index]
+    }
+
+    override fun getSelection(): Int? {
+        return getSelection(currentIndex)
+    }
+
+    override fun getResult(index: Int): Int {
+        return when (getSelection(index)) {
+            getQuestion(index).answer -> 1
+            null -> -1
+            else -> 0
+        }
+    }
+
+    override fun getResult(): Int {
+        return getResult(currentIndex)
     }
 
     fun getQuestion(index: Int): Question {
+        if (id == 0L) setId()
         val q = fetchQuestion(index)
         if (!q.hasInit) q.apply {
             key = index
@@ -89,20 +110,10 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
         resolveQuestionCount()).toList()
 
     private fun resolveQuestionCount() = min(kotlin.run {
-        val n = mConfig.mQuestionCount
+        val n = mConfig.questionCount
         if (n < 0) getTotalQuestions() - 1
-        else mConfig.mQuestionCount
+        else mConfig.questionCount
     }, getTotalQuestions() - 1)
-
-    // Methods to help determine ranges
-    fun getSetCount() = getTotalQuizQuestions() / getSetSize()
-
-    fun getSetSize() = mConfig.mSetSize
-
-    fun getLastSetSize() = (getTotalQuizQuestions() % getSetSize()).let { if (it == 0) getSetSize() else it }
-
-    fun getSetForQuestionIndex(index: Int) = index / getSetSize()
-
 
 
     interface QuizInterface {
@@ -115,25 +126,20 @@ abstract class Quiz (var topic: String, private var mConfig: Config): QuizContro
 
     class Config {
 
-        var mRandomizeOptions: Boolean = true
-        var mRandomizeQuestions: Boolean = true
-        var mQuestionCount: Int = -1
-        var mSetSize: Int = 1
+        var randomizeOptions: Boolean = true
+        var randomizeQuestions: Boolean = true
+        var questionCount: Int = -1
 
         fun randomizeOptions(randomize: Boolean = true): Config {
-            mRandomizeOptions = randomize
+            randomizeOptions = randomize
             return this
         }
         fun randomizeQuestions(randomize: Boolean = true): Config {
-            mRandomizeQuestions = randomize
+            randomizeQuestions = randomize
             return this
         }
         fun setCount(count: Int): Config {
-            mQuestionCount = count
-            return this
-        }
-        fun maxSetSize(size: Int): Config {
-            mSetSize = size
+            questionCount = count
             return this
         }
     }

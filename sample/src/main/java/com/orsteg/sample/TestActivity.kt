@@ -10,23 +10,31 @@ import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import android.view.View
-import com.orsteg.gesos.androidquizkit.*
+import com.orsteg.gesos.androidquizkit.builder.BuildMethod
+import com.orsteg.gesos.androidquizkit.builder.QuizBuilder
+import com.orsteg.gesos.androidquizkit.components.QuizHistory
+import com.orsteg.gesos.androidquizkit.components.QuizTimer
+import com.orsteg.gesos.androidquizkit.quiz.Question
+import com.orsteg.gesos.androidquizkit.quiz.Quiz
 import kotlinx.android.synthetic.main.activity_test.*
 import kotlinx.android.synthetic.main.option_item.view.*
 import java.text.SimpleDateFormat
 import java.util.*
 
 
-class TestActivity: AppCompatActivity(), Result.EndTestListener {
+class TestActivity: AppCompatActivity(), Result.EndTestListener, LoaderDialog.CancelBuildListener {
+
     private var prefs: SharedPreferences? = null
 
     lateinit var listener: AdapterView.OnItemClickListener
 
-    var mQuiz: TimedQuiz? = null
+    var mQuizTimer: QuizTimer? = null
 
     lateinit var optionAdapter: Options
 
     lateinit var dialog: LoaderDialog
+
+    lateinit var builder: QuizBuilder
 
     var result: Result? = null
 
@@ -53,8 +61,8 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
             finishTest()
         }
 
-        val builder : QuizBuilder = QuizBuilder.Builder(this)
-            .build("physics", BuildMethod.fromResource(R.raw.sheet))
+        builder = QuizBuilder.Builder(this)
+            .build("GES_300", BuildMethod.fromResource(R.raw.sheet))
 
 
         val quizConfig : Quiz.Config = Quiz.Config()
@@ -63,8 +71,8 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
 
         builder.getQuiz(quizConfig, object : Quiz.OnBuildListener {
             override fun onFinishBuild(quiz: Quiz) {
-                mQuiz = TimedQuiz(quiz, 1000 * 10)
-                QuizHistory.restoreState(mQuiz!!, savedInstanceState)
+                mQuizTimer = QuizTimer(quiz, 1000 * 10)
+                QuizHistory.restoreState(mQuizTimer!!, savedInstanceState)
                 if (savedInstanceState != null) {
                     limit = savedInstanceState.getInt("limit")
                 }
@@ -73,10 +81,9 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
         })
 
 
-
         next.setOnClickListener {
-            if (mQuiz!!.getQuiz().getTotalQuizQuestions() > 0 && mQuiz!!.getQuiz().selectionState[mQuiz!!.getQuiz().currentSet] != null) {
-                if (limit < mQuiz!!.getQuiz().currentSet) {
+            if (mQuizTimer!!.getQuestionCount() > 0 && mQuizTimer!!.getSelection() != null) {
+                if (limit < mQuizTimer!!.getQuiz().currentIndex) {
                     checkAnswer()
                 } else {
                     nextQuestion()
@@ -85,13 +92,13 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
         }
 
         previous.setOnClickListener {
-            if (mQuiz!!.getQuiz().currentSet > 0) previousQuestion()
+            if (mQuizTimer!!.getQuiz().currentIndex > 0) previousQuestion()
         }
 
 
-        listener = AdapterView.OnItemClickListener { adapterView, view, i, l ->
+        listener = AdapterView.OnItemClickListener { _, _, i, _ ->
 
-            mQuiz!!.getQuiz().selectionState[mQuiz!!.getQuiz().currentSet] = i
+            mQuizTimer!!.setSelection(i)
 
             optionAdapter.notifyDataSetChanged()
         }
@@ -104,8 +111,8 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
     }
 
     fun startQuiz() {
-        mQuiz?.apply {
-            onTimeChangeListener = object : TimedQuiz.OnTimeChangeListener {
+        mQuizTimer?.apply {
+            onTimeChangeListener = object : QuizTimer.OnTimeChangeListener {
                 override fun onTimerTick(timeLeft: Long) {
                     // update time TextView
                     val time = (date.clone() as Calendar).apply { timeInMillis += timeLeft }
@@ -119,7 +126,7 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
                 }
             }
 
-            val q = getCurrentQuestionSet()[0]
+            val q = getCurrentQuestion()
 
             optionAdapter = Options(this@TestActivity)
 
@@ -135,20 +142,20 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
 
     override fun onPause() {
         super.onPause()
-        mQuiz?.pause()
+        mQuizTimer?.suspend()
         if (dialog.isShowing) dialog.dismiss()
         if (result?.isShowing == true) result?.dismiss()
     }
 
     override fun onResume() {
         super.onResume()
-        mQuiz?.start()
+        mQuizTimer?.start()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
-        QuizHistory.saveToBundle(mQuiz, outState)
+        QuizHistory.saveToBundle(mQuizTimer, outState)
         outState.putInt("limit", limit)
 
     }
@@ -168,23 +175,23 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
         options.onItemClickListener = null
         next.text = "Next"
 
-        val q = mQuiz!!.previousQuestionSet()[0]
+        val q = mQuizTimer!!.previousQuestion()
 
-        index.text = "(" + (mQuiz!!.getQuiz().currentSet + 1) + ")  of  (${mQuiz!!.getQuiz().getTotalQuizQuestions()})"
+        index.text = "(" + (mQuizTimer!!.getCurrentQuestionIndex() + 1) + ")  of  (${mQuizTimer!!.getQuestionCount()})"
 
 
-        question.text = q.question
+        question.text = q.statement
         optionAdapter.setQuestion(q)
 
     }
 
     fun nextQuestion(qs: Question? = null) {
 
-        if ((mQuiz!!.getQuiz().currentSet < mQuiz!!.getQuiz().getTotalQuizQuestions() - 1) || qs != null) {
+        if ((mQuizTimer!!.getCurrentQuestionIndex() < mQuizTimer!!.getQuestionCount() - 1) || qs != null) {
 
-            val q = qs?:mQuiz!!.nextQuestionSet()[0]
+            val q = qs?:mQuizTimer!!.nextQuestion()
 
-            if (mQuiz!!.getQuiz().currentSet > limit) {
+            if (mQuizTimer!!.getCurrentQuestionIndex() > limit) {
                 options.onItemClickListener = listener
                 next.text = "Continue"
             } else {
@@ -192,32 +199,38 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
                 next.text = "Next"
             }
 
-            index.text = "(" + (mQuiz!!.getQuiz().currentSet + 1) + ")  of  (${mQuiz!!.getQuiz().getTotalQuizQuestions()})"
+            index.text = "(" + (mQuizTimer!!.getCurrentQuestionIndex() + 1) + ")  of  (${mQuizTimer!!.getQuestionCount()})"
 
 
-            question.text = q.question
+            question.text = q.statement
             optionAdapter.setQuestion(q)
 
-        } else if (mQuiz!!.getQuiz().getTotalQuizQuestions() > 0) {
+        } else if (mQuizTimer!!.getQuestionCount() > 0) {
             finishTest()
         }
     }
 
     fun finishTest() {
 
-        mQuiz!!.finish()
+        mQuizTimer!!.finish()
 
-        val correctCount = QuizHistory.Stats.getNumberOfCorrectAnswers(mQuiz!!.getQuiz())
-        val questionCount = mQuiz!!.getQuiz().getTotalQuizQuestions()
+        val correctCount = QuizHistory.Stats.getNumberOfCorrectAnswers(mQuizTimer!!.getQuiz())
+        val questionCount = mQuizTimer!!.getQuestionCount()
 
         result = Result(this, "$correctCount/$questionCount")
         result?.show()
-        QuizHistory.getInstance(this).saveToHistory(mQuiz!!)
+        QuizHistory.getInstance(this).saveToHistory(mQuizTimer!!)
     }
 
     override fun end() {
         finish()
     }
+
+    override fun cancel() {
+        builder.cancel()
+        finish()
+    }
+
 
     inner class Options(var context: Context) : BaseAdapter() {
 
@@ -254,11 +267,11 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener {
             view1.value.text = indexes[i] + getItem(i)
 
             if (q.key > limit) {
-                if (i == mQuiz!!.getQuiz().selectionState[q.key]) {
+                if (i == mQuizTimer!!.getSelection()) {
                     view1.state.setImageResource(android.R.drawable.checkbox_on_background)
                 }
             } else {
-                if (mQuiz!!.getQuiz().selectionState[q.key] == i) {
+                if (mQuizTimer!!.getSelection() == i) {
                     view1.state.setImageResource(R.drawable.ic_close_black_24dp)
                     view1.setBackgroundColor(context.resources.getColor(R.color.myRed))
                 }

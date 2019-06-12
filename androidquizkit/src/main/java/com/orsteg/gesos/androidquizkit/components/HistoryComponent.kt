@@ -1,8 +1,9 @@
-package com.orsteg.gesos.androidquizkit
+package com.orsteg.gesos.androidquizkit.components
 
 import android.os.Bundle
+import com.orsteg.gesos.androidquizkit.quiz.Quiz
 
-interface HistoryInterface {
+interface HistoryComponent {
 
     fun getQuiz(): Quiz
 
