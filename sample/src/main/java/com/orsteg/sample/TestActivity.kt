@@ -142,7 +142,7 @@ class TestActivity: AppCompatActivity(), Result.EndTestListener, LoaderDialog.Ca
 
     override fun onPause() {
         super.onPause()
-        mQuizTimer?.pause()
+        mQuizTimer?.suspend()
         if (dialog.isShowing) dialog.dismiss()
         if (result?.isShowing == true) result?.dismiss()
     }

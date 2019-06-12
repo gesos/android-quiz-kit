@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.os.Bundle
 import android.os.CountDownTimer
-import android.util.Log
 import com.orsteg.gesos.androidquizkit.quiz.Quiz
 import com.orsteg.gesos.androidquizkit.quiz.QuizController
 import java.util.*
@@ -105,7 +104,7 @@ class QuizTimer(val mQuiz: Quiz, var totalTimeInMillis: Long, val tickInterval: 
         }
     }
 
-    fun pause() {
+    fun suspend() {
         if (isPlaying) {
             mTimer?.cancel()
             isPlaying = false
@@ -113,7 +112,7 @@ class QuizTimer(val mQuiz: Quiz, var totalTimeInMillis: Long, val tickInterval: 
         }
     }
 
-    fun suspend() {
+    fun pause() {
         if (isPlaying) {
             mTimer?.cancel()
             isPlaying = false
@@ -123,13 +122,12 @@ class QuizTimer(val mQuiz: Quiz, var totalTimeInMillis: Long, val tickInterval: 
 
     fun cancel() {
         pause()
-        lastPauseTime = -1
         tickTime = 0
         hasFinished = false
     }
 
     fun finish() {
-        pause()
+        suspend()
         lastPauseTime = -1
         hasFinished = true
     }
