@@ -48,10 +48,25 @@ This library is used in building the [Uniport GES 300 Quiz App](https://github.c
 ## How to Use
 
 ### Including Dependencies
+The project can be pulled from jitpack using the required release.
+
+In your root/project level gradle file add the following dependency
+
+```groovy
+allprojects {
+    repositories {
+      ...
+      maven { url 'https://jitpack.io' }
+    }
+}
+```
+
 In your app level gradle file add the following dependency
 
 ```groovy
-
+dependencies {
+  implementation 'com.github.gesos:android-quiz-kit:v0.0.1-beta'
+}
 ```
 ### Setting Questions
 For the simple case of multiple choice questions (Interpreted by the `SimpleQuizParser` class. For other question formats, see [Setting a QuizParser](/docs/using-the-quiz-builder.md#setting-a-quizparser)), create a file containing the questions written in the following format.
