@@ -2,7 +2,7 @@
 Specialized development kit for building standard quiz apps. Built with `kotlin` and lots of :coffee:
 
 ## Introduction
-> ## Making questions for a quiz app should be one of the least daunting tasks, but most times it isn't!
+> Making questions for a quiz app should be one of the least daunting tasks, but most times it isn't!
 
 There's a difference between setting quiz questions and programming quiz questions. The aim of this library is to bridge the gap between setting actual quiz questions and building a quiz app. Questions can be set by simply creating a text file containing the questions written as though it was supposed to be a hand written quiz :smile:. The file is then converted by the API into a complete `Quiz` object used by the app. The app can thus be built in a very dynamic way by allowing the quiz to be created either from a file in phone storage, an input stream, a String, or from the internet.
 
