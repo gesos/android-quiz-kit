@@ -1,4 +1,7 @@
 # Android Quiz Kit
+
+[![](https://jitpack.io/v/gesos/android-quiz-kit.svg)](https://jitpack.io/#gesos/android-quiz-kit)
+
 Specialized development kit for building standard quiz apps. Built with `kotlin` and lots of :coffee:
 
 ## Introduction
