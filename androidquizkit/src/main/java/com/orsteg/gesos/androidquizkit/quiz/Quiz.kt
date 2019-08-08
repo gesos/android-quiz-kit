@@ -52,6 +52,7 @@ abstract class Quiz (var topic: String, private var mConfig: Config):
     }
 
     override fun gotoQuestion(index: Int): Question {
+        currentIndex = index
         return getQuestion(index)
     }
 
