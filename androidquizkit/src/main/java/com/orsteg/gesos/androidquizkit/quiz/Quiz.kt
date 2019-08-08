@@ -111,9 +111,9 @@ abstract class Quiz (var topic: String, private var mConfig: Config):
 
     private fun resolveQuestionCount() = min(kotlin.run {
         val n = mConfig.questionCount
-        if (n < 0) getTotalQuestions() - 1
+        if (n < 0) getTotalQuestions()
         else mConfig.questionCount
-    }, getTotalQuestions() - 1)
+    }, getTotalQuestions())
 
 
     interface QuizInterface {
