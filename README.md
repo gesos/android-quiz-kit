@@ -68,7 +68,7 @@ In your app level gradle file add the following dependency
 
 ```groovy
 dependencies {
-  implementation 'com.github.gesos:android-quiz-kit:v0.0.1-beta'
+  implementation 'com.github.gesos:android-quiz-kit:v0.0.3-beta'
 }
 ```
 ### Setting Questions
