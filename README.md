@@ -106,27 +106,27 @@ There are five BuildMethods provided by the API
 
 1. Building from string
 ```kotlin
-val method : Builmethod = BuildMethod.fromString(quizString)
+val method : BuildMethod = BuildMethod.fromString(quizString)
 ```
 
 2. Building from InputStream
 ```kotlin
-val method : Builmethod = BuildMethod.fromInputStream(quizStream)
+val method : BuildMethod = BuildMethod.fromInputStream(quizStream)
 ```
 
 3. Building from Android Raw Resources
 ```kotlin
-val method : Builmethod = BuildMethod.fromResource(quizRes)
+val method : BuildMethod = BuildMethod.fromResource(quizRes)
 ```
 
 4. Building from a File
 ```kotlin
-val method : Builmethod = BuildMethod.fromFile(quizFile)
+val method : BuildMethod = BuildMethod.fromFile(quizFile)
 ```
 
 5. ~~Building from a url~~ Not yet implemented. Watch out for next release.
 ```kotlin
-val method : Builmethod = BuildMethod.fromUrl(quizUrl)
+val method : BuildMethod = BuildMethod.fromUrl(quizUrl)
 ```
 
 #### Creating the QuizBuilder
