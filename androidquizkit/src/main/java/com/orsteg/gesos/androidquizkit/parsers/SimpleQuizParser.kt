@@ -23,6 +23,11 @@ class SimpleQuizParser: BaseQuizParser() {
             if (value > 0) field = value
         }
 
+    init {
+        // Fix for the buffer, since parsing always starts from a new line
+        if (!shouldValidate) mBuffer.append("\n")
+    }
+
     override fun validate(): Boolean {
 
         Log.d("tg", mBuffer.substring(0, headerByteSize))
