@@ -14,7 +14,13 @@ The API is built to be both simple to use and highly customizable for developers
 ## Demo
 View demo [app](https://github.com/gesos/ges-300-quiz-app) and source [code](/sample) for usage.
 
-This library is used in building the [Uniport GES 300 Quiz App](https://github.com/gesos/ges-300-quiz-app). Built something great with this library? feel free to let us know :+1:.
+This library was used in building the [Uniport GES 300 Quiz App](https://github.com/gesos/ges-300-quiz-app).
+
+**Other notable mentions include:**
+
+- [YearOneSuite](https://play.google.com/store/apps/details?id=ng.hybrid.yearonesuite) by [@TristanKluivert](https://github.com/Tristankluivert)
+
+Built something great with this library? feel free to let us know :+1:
 
 ## Table of Contents
   - [Introduction](#introduction)
