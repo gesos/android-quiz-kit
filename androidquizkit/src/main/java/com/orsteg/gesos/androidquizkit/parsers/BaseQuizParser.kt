@@ -18,6 +18,11 @@ abstract class BaseQuizParser {
     var shouldValidate: Boolean = true
 
     var result: Deferred<State>? = null
+    
+    init {
+        // Fix for the buffer, since parsing normally starts from a new line
+        if (!shouldValidate) mBuffer.append("\n")
+    }
 
     fun append(data: String): State {
 
@@ -104,6 +109,7 @@ abstract class BaseQuizParser {
 
     fun copy(parser: BaseQuizParser) {
         parser.mBuffer = mBuffer
+        parser.shouldValidate = shouldValidate
     }
 
     open fun reset() {
